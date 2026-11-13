@@ -52,8 +52,28 @@
           </div>
         </div>
 
-        <!-- Data Backup, Cloud Sync, Reset & Theme Controls -->
+        <!-- Score Mode Switcher, Data Backup, Cloud Sync & Theme Controls -->
         <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <!-- Global Scoring Methodology Switcher -->
+          <div class="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800" title="Alternar cálculo de aderência entre Fit Executivo e Algoritmo Gupy Gaia">
+            <button
+              type="button"
+              id="btnScoreModeGeneral"
+              onclick="setScoreMode('general')"
+              class="px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer"
+            >
+              🎯 Fit Geral
+            </button>
+            <button
+              type="button"
+              id="btnScoreModeGupy"
+              onclick="setScoreMode('gupy')"
+              class="px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer"
+            >
+              🤖 Match Gupy
+            </button>
+          </div>
+
           <button
             type="button"
             onclick="openCloudSyncModal()"
@@ -154,14 +174,14 @@
         <!-- KPI 3: Média de Aderência (%) -->
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-xl p-4 shadow-xs">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Média de Aderência</span>
+            <span id="kpiAvgMatchTitle" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Média de Aderência</span>
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </span>
           </div>
           <div class="mt-2 flex items-baseline gap-2">
             <span id="kpiAvgMatch" class="font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">0%</span>
-            <span class="text-xs text-zinc-400 dark:text-zinc-500">fit executivo</span>
+            <span id="kpiAvgMatchSub" class="text-xs text-zinc-400 dark:text-zinc-500">fit executivo</span>
           </div>
         </div>
 
@@ -242,7 +262,7 @@
           </button>
         </div>
 
-        <!-- Bottom Row: Filters (hidden in Radar tab to keep focus) -->
+        <!-- Bottom Row: Filters -->
         <div id="filterBar" class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           <!-- Text Search -->
           <div class="relative flex-1">
@@ -342,7 +362,7 @@
           class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition cursor-pointer whitespace-nowrap"
         >
           <span>📄 Currículo ATS (Vaga)</span>
-          <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300">100% Fiel</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300">Skill + Gupy</span>
         </button>
         <button
           type="button"
@@ -388,6 +408,7 @@
             type="text"
             id="fieldVaga"
             required
+            oninput="updateDrawerGupyLivePreview()"
             placeholder="Ex: Growth Manager (Parcerias Estratégicas & Canais)"
             class="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
           />
@@ -425,6 +446,7 @@
             <label for="fieldModelo" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Modelo</label>
             <select
               id="fieldModelo"
+              onchange="updateDrawerGupyLivePreview()"
               class="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
             >
               <option value="Remoto">Remoto</option>
@@ -445,7 +467,7 @@
           </div>
 
           <div>
-            <label for="fieldAderencia" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Aderência (%)</label>
+            <label for="fieldAderencia" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Aderência Geral (%)</label>
             <input
               type="number"
               id="fieldAderencia"
@@ -454,6 +476,28 @@
               value="85"
               class="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
             />
+          </div>
+        </div>
+
+        <!-- Gupy Education Requirement Selector & Real-Time Gupy Score Preview -->
+        <div class="p-3.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/25 border border-teal-200/80 dark:border-teal-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex-1">
+            <label for="fieldExigeGraduacao" class="block text-xs font-bold text-teal-900 dark:text-teal-200 mb-1">
+              🤖 Regra de Formação na Gupy (Algoritmo Gaia)
+            </label>
+            <select
+              id="fieldExigeGraduacao"
+              onchange="updateDrawerGupyLivePreview()"
+              class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-teal-200 dark:border-teal-800 rounded-lg text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-teal-500"
+            >
+              <option value="flexivel">Aceita cursando / Não exige diploma concluído</option>
+              <option value="concluida">Exige Ensino Superior Concluído (penaliza em andamento)</option>
+              <option value="nao_informado">Não especificado na vaga</option>
+            </select>
+          </div>
+          <div id="drawerGupyLiveBox" class="shrink-0 px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-teal-200/80 dark:border-teal-800 text-right">
+            <div class="text-[10px] font-bold uppercase text-zinc-400">Score Gupy Est.</div>
+            <div id="drawerGupyLiveValue" class="font-display text-lg font-extrabold text-teal-600 dark:text-teal-400 tabular-nums">--%</div>
           </div>
         </div>
 
@@ -481,7 +525,8 @@
           <label for="fieldObservacoes" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Observações Estratégicas / Notas de Entrevista</label>
           <textarea
             id="fieldObservacoes"
-            rows="3"
+            rows="2"
+            oninput="updateDrawerGupyLivePreview()"
             placeholder="Pontos de match com Pluga/Cactus/Academia, faixa salarial, perguntas-chave, impressões da entrevista..."
             class="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
           ></textarea>
@@ -491,7 +536,8 @@
           <label for="fieldDescricaoVaga" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Descrição Completa da Vaga / Palavras-chave (para calibragem do Currículo ATS)</label>
           <textarea
             id="fieldDescricaoVaga"
-            rows="4"
+            rows="3"
+            oninput="updateDrawerGupyLivePreview()"
             placeholder="Cole aqui os requisitos, responsabilidades e palavras-chave da Gupy/Inhire para otimizar o match ATS..."
             class="w-full px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
           ></textarea>
@@ -522,10 +568,10 @@
       </form>
 
       <!-- TAB 2: ATS RESUME CALIBRATION PANEL -->
-      <div id="atsPanel" class="hidden flex-1 overflow-y-auto p-6 space-y-5"></div>
+      <div id="atsPanel" class="hidden flex-1 overflow-y-auto p-6 space-y-4"></div>
 
       <!-- TAB 3: NETWORKING & MINI-CRM PANEL -->
-      <div id="networkingPanel" class="hidden flex-1 overflow-y-auto p-6 space-y-6"></div>
+      <div id="networkingPanel" class="hidden flex-1 overflow-y-auto p-6 space-y-5"></div>
     </div>
   </div>
 
@@ -765,7 +811,7 @@
 
   <script>
     // =========================================================================
-    // CONSTANTS, ENUMS & VERIFIED CANDIDATE FACTS
+    // CONSTANTS, ENUMS & UNIFIED VERIFIED CANDIDATE FACTS (SKILL + GUPY)
     // =========================================================================
     const STORAGE_KEY_V2 = 'crm_vagas_matheus_v2';
     const LEGACY_KEYS = ['crm_vagas_matheus_v1', 'crm_vagas_matheus_sobral_v1'];
@@ -858,131 +904,145 @@
       'Fit Cultural / Outro',
     ];
 
-    // 100% Verified Facts Repository (Matheus Sobral Nobre) — zero fabricated claims
+    // Unified 100% Verified Facts Repository (Skill + Gupy CV PDF)
     const VERIFIED_CANDIDATE_FACTS = {
       fullName: 'MATHEUS SOBRAL NOBRE',
+      contactLine: 'Rua Riachuelo, Centro — Rio de Janeiro/RJ (CEP 20230-010) • +55 (21) 97573-9076 • mthsobral@gmail.com',
+      linkedin: 'https://www.linkedin.com/in/mthsobral/',
       location: 'Rio de Janeiro, RJ — Disponível para Remoto ou Híbrido (Centro RJ)',
       summaries: {
         partnerships:
-          'Especialista em Parcerias Estratégicas, Channel Partnerships e Ecossistemas B2B SaaS com mais de 8 anos de experiência na construção e escala de canais, relacionamento institucional e operações orientadas a dados. Histórico comprovado na estruturação de governança de parceiros do zero (Score de Parceiros, Tiers, CRM e Onboarding), expansão de +500% na base ativa em 2025 e liderança de mais de 120 ações anuais de co-marketing conectadas a MRR, LTV e retenção.',
+          'Especialista em Parcerias Estratégicas (Partnership Development & Channel Partnerships) e Ecossistemas B2B SaaS com mais de 8 anos de experiência na interface entre Marketing, Produto, Comercial e Canais. Histórico comprovado na estruturação de governança de parceiros do zero (Score de Parceiros em 5 dimensões, Calculadora ICE, matriz de Tiers A/B/C/D para 94 parceiros e migração de CRM Agendor para Notion), expansão de +500% na base ativa em 2025 e liderança de 120+ ações anuais de co-marketing integradas a KPIs de receita rastreável no Metabase (71,5% via tracking), MRR e LTV.',
         retention:
-          'Especialista em Parcerias, Fidelização e Relacionamento B2B com mais de 8 anos de experiência na estruturação de programas de parceiros, governança de ecossistema, onboarding e estratégias de engajamento orientadas a LTV e redução de churn. Experiência prática na prospecção e gestão de parceiros estratégicos (como ContaAzul, gerando +40% de LTV e -7% de churn), desenho de réguas de relacionamento e capacitação de equipes comerciais.',
+          'Especialista em Parcerias, Fidelização e Engajamento B2B com mais de 8 anos de experiência na estruturação de programas de parceiros, governança de benefícios, Partner Onboarding e retenção orientada a LTV e redução de churn. Experiência direta na gestão e ativação de parceiros estratégicos em ambiente SaaS (como ContaAzul, gerando +40% de LTV e -7% de churn, e Agendor com extensões in-app), reativação de base inativa (71 parceiros), desenho de réguas de relacionamento (kits personalizados, feedbacks trimestrais e eventos) e Account Management institucional de 25+ grandes empresas (~R$ 3 milhões em pipeline).',
         growthAbm:
-          'Especialista em Parcerias, ABM e Growth Marketing B2B SaaS com mais de 8 anos de experiência integrando canais estratégicos, geração de demanda, co-marketing e inteligência de funil. Atuação orientada a OKRs e KPIs de receita rastreável (71,5% dos cadastros via tracking no Metabase), alinhamento estreito entre Marketing e Vendas, gestão de pipeline B2B e campanhas conjuntas de aquisição e conversão.',
+          'Especialista em Parcerias, ABM e Growth Marketing B2B SaaS com mais de 8 anos de experiência integrando aquisição via canais, geração de demanda, co-marketing e inteligência de funil. Atuação orientada a OKRs e KPIs no Metabase (receita rastreável com 71,5% dos cadastros via tracking, MRR, LTV e taxa de conversão por parceiro), estruturação de processos comerciais e playbooks B2B do zero, fluxos automatizados de nutrição (RD Station / HubSpot) e alinhamento estreito entre Marketing e Vendas.',
         communityPmm:
-          'Especialista em Ecossistema Tech, Parcerias Estratégicas e Marketing B2B com mais de 8 anos de experiência conectando marcas, comunidades, instituições de ensino e empresas parceiras. Trajetória consolidada na liderança de iniciativas de co-marketing (120+ ações/ano), organização de grandes eventos do ecossistema (como "Dia do Estagiário do Futuro" com YDUQS, McDonald\'s, Tinder, Ambev e Uber) e posicionamento orientado a adoção e retenção.',
+          'Especialista em Ecossistema Tech, Parcerias Estratégicas, Comunidades e Product Marketing B2B com mais de 8 anos de experiência conectando marcas, desenvolvedores, instituições de ensino e empresas parceiras. Liderou 120+ ações anuais de co-marketing (webinars, guest posts, marketplaces, treinamentos e PR), cofundou HRTech que impactou 3M+ universitários (11 mil membros em comunidade proprietária) e coordenou com a YDUQS o evento "Dia do Estagiário do Futuro" (McDonald\'s, Tinder, Raízen, Ambev e Uber).',
       },
       experiences: [
         {
-          role: 'Especialista em Parcerias',
+          role: 'Especialista em Parcerias (Partnership Development & Channel Partnerships)',
           company: 'Pluga',
-          period: 'Out 2024 – Presente',
+          period: '10/2024 – Presente',
           location: 'Rio de Janeiro, RJ (B2B SaaS de Integrações e Automação)',
           bullets: [
             {
               tags: ['partnerships', 'retention', 'governance', 'crm', 'tiers'],
-              text: 'Estruturou a governança do canal de Parcerias B2B SaaS do zero: desenvolveu Score de Parceiros (5 dimensões ponderadas), Calculadora ICE, matriz de Tiers (A/B/C/D) para 94 parceiros e migrou o CRM do Agendor para um ambiente customizado no Notion.',
+              text: 'Estruturou a governança do canal de Parcerias B2B SaaS na interface entre Marketing, Produto e ecossistema (CRMs, ERPs, meios de pagamento e automação): criou Score de Parceiros (5 dimensões ponderadas), Calculadora ICE, matriz de Tiers (A/B/C/D) classificando 94 parceiros e migrou o CRM do Agendor para o Notion customizado.',
             },
             {
-              tags: ['partnerships', 'growthAbm', 'scale', 'canais'],
-              text: 'Expandiu a base de parceiros ativos de 3 para 18 em 2025 (+500%) e de 7 para 19 em 2026, gerindo o ciclo completo de prospecção, negociação, ativação e relacionamento.',
-            },
-            {
-              tags: ['growthAbm', 'communityPmm', 'partnerships', 'comarketing', 'eventos'],
-              text: 'Liderou 118 ações de co-marketing em 2025 (recorde histórico no Q3 com 48 ações) e superou 120 ações em 2026, integrando conteúdo, webinars, campanhas conjuntas e capacitação (enablement) com parceiros.',
-            },
-            {
-              tags: ['growthAbm', 'partnerships', 'dados', 'metabase', 'kpi'],
-              text: 'Evoluiu a análise mensal no Metabase para KPIs de receita rastreável (71,5% dos cadastros via tracking), MRR, LTV e taxa de conversão por parceiro.',
+              tags: ['partnerships', 'retention', 'growthAbm', 'scale', 'canais'],
+              text: 'Expandiu a base de parceiros estratégicos ativos em +500% em 2025 (de 3 para 18 ativos) e alcançou 19 ativos em 2026 via Account Management estruturado, além de criar programa de ativação para 71 parceiros inativos.',
             },
             {
               tags: ['retention', 'partnerships', 'communityPmm', 'ltv', 'churn'],
-              text: 'Conduziu cases de parceria de alto impacto, incluindo ContaAzul (+40% de LTV e -7% de churn) e Agendor (extensões in-app), além de criar rotinas de Partner Onboarding, kits personalizados e pesquisas trimestrais de feedback.',
+              text: 'Conduziu cases de alto impacto em retenção e produto: ContaAzul (+40% de LTV e -7% de churn via integração otimizada por API e co-marketing) e Agendor (extensões in-app), além de estruturar Partner Onboarding com kits personalizados, feedbacks trimestrais e eventos.',
             },
             {
-              tags: ['growthAbm', 'partnerships', 'okr', 'ia'],
-              text: 'Alinhou o planejamento estratégico do canal em 2026 aos 3 OKRs corporativos da companhia (IA, tráfego qualificado e novos pagantes).',
+              tags: ['growthAbm', 'communityPmm', 'partnerships', 'comarketing', 'eventos'],
+              text: 'Liderou 118 ações de co-marketing em 2025 (recorde histórico no Q3 com 48 entregas) e superou 120 ações em 2026 (webinars, guest posts, marketplaces, treinamentos e PR via parcerias).',
+            },
+            {
+              tags: ['growthAbm', 'partnerships', 'dados', 'metabase', 'kpi'],
+              text: 'Evoluiu as análises mensais no Metabase com KPIs de receita rastreável (71,5% dos cadastros comprovados via tracking), MRR, LTV e taxa de conversão por parceiro, alinhando o plano 2026 aos 3 OKRs corporativos (IA, tráfego e novos clientes).',
             },
           ],
         },
         {
-          role: 'Gerente de Marketing e Relações com Investidores',
+          role: 'Gerente de Marketing e Relacionamento com Investidores',
           company: 'Associação Cactus',
-          period: '2023 – 2024',
+          period: '01/2023 – 09/2024',
           location: 'Rio de Janeiro, RJ',
           bullets: [
             {
               tags: ['partnerships', 'retention', 'growthAbm', 'stakeholder', 'crm'],
-              text: 'Geriu carteira institucional de 25+ empresas e institutos parceiros (IBM, BTG Pactual, iFood, Instituto Gol, Accenture, Mercado Livre, RaiaDrogasil, FINEP e Insper) e pipeline de cerca de R$ 3 milhões em negociações ativas no RD Station CRM.',
+              text: 'Liderou o Account Management de portfólio com 25+ empresas e institutos (iFood, IBM, BTG Pactual, Instituto Gol, Accenture, Fundação Behring, Mercado Livre, RaiaDrogasil, Instituto Localiza, FINEP, Grupo Boticário, Insper, Watch TV, ADA, Copastur, Alura Start e CI&T), negociando renovações com Fundação Telefônica Vivo, BTG Pactual, IBM e parceria de longo prazo com o Instituto Gol.',
+            },
+            {
+              tags: ['growthAbm', 'partnerships', 'retention', 'crm'],
+              text: 'Geriu pipeline comercial no RD Station CRM com cerca de R$ 3 milhões em negociações ativas, estruturando política de investimento social (cotas, contrapartidas e modelos de parceria), prospecção multicanal e editais.',
             },
             {
               tags: ['retention', 'partnerships', 'communityPmm', 'governanca'],
-              text: 'Desenvolveu política de investimento social, régua estruturada de Stakeholder Management e liderou equipe de captadores, conquistando os selos Voa AMBEV, Doar A+ e ONG Transparente.',
+              text: 'Definiu régua de Stakeholder Management, relatórios de impacto (2022/2023), liderou equipe de captadores e conquistou os selos Voa AMBEV, Doar A+, ONG Transparente e ONG Verificada.',
             },
           ],
         },
         {
           role: 'Embaixador de Marca',
-          company: 'Bolder / Fábrica de Startups Brasil',
-          period: '2022 – 2023',
+          company: 'Bolder (Fábrica de Startups Brasil)',
+          period: '05/2022 – 06/2023',
           location: 'São Paulo, SP',
           bullets: [
             {
               tags: ['communityPmm', 'partnerships', 'ecossistema', 'pr'],
-              text: 'Co-criou o plano de comunicação de rebranding (#somosbolder), estratégia de PR com inserções em Época Negócios, Startups.com.br e Terra, além de ativação de ecossistema de inovação e influenciadores.',
+              text: 'Co-criou plano de comunicação para rebranding corporativo (#somosbolder), estruturou press-kit e estratégia de PR (Época Negócios, Startups.com.br, Terra e Digital Money) e geriu relacionamento com parceiros do ecossistema de inovação e influenciadores.',
             },
           ],
         },
         {
           role: 'Head of Growth Marketing',
           company: 'Carbon – The Human Element',
-          period: '2022',
+          period: '05/2022 – 10/2022',
           location: 'São Paulo, SP',
           bullets: [
             {
               tags: ['growthAbm', 'partnerships', 'okr', 'crm', 'prospeccao'],
-              text: 'Estruturou diagnóstico empresarial, definição de OKRs, implementação de CRM e processo de prospecção B2B do zero; publicou coluna na Exame sobre Diversidade com alcance superior a 500 mil leitores.',
+              text: 'Construiu diagnóstico empresarial, definição de OKRs/KPIs de growth e criou do zero o CRM, processo de prospecção comercial B2B e playbook de vendas; publicou coluna na Exame sobre Diversidade (500k+ leitores).',
             },
           ],
         },
         {
-          role: 'Co-fundador e Sócio | Head de Marketing',
+          role: 'Sócio e Co-fundador | Head of Marketing & Employer Branding',
           company: 'Academia do Universitário',
-          period: '2018 – 2022',
+          period: '03/2018 – 04/2022',
           location: 'Rio de Janeiro, RJ',
           bullets: [
             {
               tags: ['communityPmm', 'partnerships', 'eventos', 'ensino'],
-              text: 'Cofundou startup que impactou mais de 3 milhões de universitários, liderou equipe de 10 pessoas e geriu relacionamento comercial e institucional com 50+ empresas parceiras.',
+              text: 'Cofundou HRTech (investida por executivos da Afferolab, LEO Learning e Descomplica) que impactou 3M+ universitários; liderou equipe de até 10 pessoas em squads multidisciplinares (Parcerias, Eventos, Marca Empregadora, Conteúdo, SEO, Comunidades e PR) com OKRs, Scrum e Kanban.',
             },
             {
-              tags: ['communityPmm', 'partnerships', 'eventos'],
-              text: 'Coordenou em parceria com a YDUQS o evento "Dia do Estagiário do Futuro", reunindo grandes marcas como McDonald\'s, Tinder, Ambev e Uber.',
+              tags: ['communityPmm', 'partnerships', 'growthAbm', 'eventos'],
+              text: 'Construiu do MVP ao Go-to-Market o "Programa Super Estags", o produto "Board da Alma" e a comunidadedoestagio.com (11.000 membros e 20.000 candidaturas), gerindo relacionamento com 50+ empresas parceiras e coordenando com a YDUQS o evento "Dia do Estagiário do Futuro" (McDonald\'s, Tinder, Adventures, Raízen, Ambev e Uber).',
             },
             {
-              tags: ['communityPmm', 'growthAbm', 'marca'],
-              text: 'Alcançou 200+ portais de imprensa (Exame, G1, Forbes, StartSe), 2M+ visualizações/mês no TikTok (125 mil seguidores), certificação Great Place To Work 2022 e Case Qulture Rocks 2021.',
+              tags: ['communityPmm', 'growthAbm', 'marca', 'dados'],
+              text: 'Implementou fluxos automatizados de nutrição B2B/B2C (RD Station), reduziu em 60% a taxa de rejeição do site e alcançou 200+ portais de imprensa (Exame, G1, Forbes, PEGN), 2M+ views/mês no TikTok (125k seguidores), Great Place To Work 2022 e Case Qulture Rocks 2021 (70% de engajamento).',
+            },
+          ],
+        },
+        {
+          role: 'Experiências Iniciais: Consultor de Processos & Estagiário de RH',
+          company: 'Iniciativa Consultoria (03/2017–08/2017) & Nexans (07/2017–02/2018)',
+          period: '2017 – 2018',
+          location: 'Rio de Janeiro, RJ',
+          bullets: [
+            {
+              tags: ['partnerships', 'retention', 'governanca', 'dados'],
+              text: 'Iniciativa Consultoria: elaboração de planos de negócios, pesquisas de mercado em planilhas dinâmicas, matriz SWOT, viabilidade financeira e mapeamento de processos no Bizagi. Nexans: gestão de processos seletivos, contratação de consultorias, indicadores e logística de treinamentos corporativos nos sistemas ADP e SAP.',
             },
           ],
         },
       ],
       mentoring:
-        'Mentor de Startups no InovAtiva Brasil e na Abstartups (programas Start e AcBoost) desde 2022, apoiando founders em go-to-market, parcerias B2B e growth.',
-      education: 'Bacharelado em Administração (Graduando / Fase de TCC) — Universidade do Estado do Rio de Janeiro (FAF-UERJ)',
-      languages: 'Inglês Avançado | Espanhol Básico',
+        'Mentor de Startups no InovAtiva Brasil (07/2022 – Atual) e na Abstartups / Sebrae for Startups nos programas Start e AcBoost (08/2022 – Atual, meta de 1.000+ startups/ano); Pessoa Mentora no programa TODXS Impacto (2022) e Voluntário de Gente & Gestão no Litro de Luz Brasil (2018 – 2022).',
+      education: 'Bacharelado em Administração (Em andamento / Fase final de TCC) — Universidade do Estado do Rio de Janeiro (FAF-UERJ)',
+      languages: 'Português (Nativo/Fluente) | Inglês (Avançado) | Espanhol (Básico)',
       tools: [
         'Notion (Avançado)',
         'Metabase',
         'Google Analytics 4 (GA4)',
-        'Excel Avançado',
+        'Excel Avançado & Planilhas Dinâmicas',
         'SQL (Básico)',
         'RD Station CRM & Marketing',
         'HubSpot',
         'Pipedrive',
         'Salesforce (Básico)',
         'Agendor',
-        'Asana & ClickUp',
-        'Qulture Rocks',
+        'Asana, ClickUp, Miro & Bizagi',
+        'Qulture Rocks, SAP & ADP',
         'IA Aplicada (Claude, ChatGPT, Gemini, Perplexity)',
       ],
     };
@@ -999,6 +1059,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 87,
+        exigeGraduacao: 'nao_informado',
         proximoPasso: 'Mapear Head de Marketing / Demand Gen da SoftExpert e preparar CV ATS',
         observacoes: 'Publicada em 10/11/2026 (aberta até 10/12/2026). Nível Especialista, 100% remota. Forte sinergia com co-marketing B2B SaaS, alinhamento Marketing-Comercial, nutrição de contas e KPIs de pipeline.',
         descricaoVaga: 'Especialista de ABM Account-Based Marketing B2B SaaS, geração de demanda, alinhamento marketing e vendas, campanhas personalizadas para contas estratégicas, KPIs de pipeline, conversão e ROI.',
@@ -1016,6 +1077,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 85,
+        exigeGraduacao: 'flexivel',
         proximoPasso: 'Mapear liderança de Planejamento de Tecnologia / Tech Community do Grupo Boticário',
         observacoes: 'Aberta até 21/12/2026. Nível Especialista I, 100% remota. Pilar explícito de parcerias com o ecossistema tech, comunidades, eventos e instituições de ensino.',
         descricaoVaga: 'Parcerias com o ecossistema tech, desenvolver e sustentar relações com comunidades, eventos, instituições de ensino e parceiros estratégicos, engajamento e posicionamento da marca empregadora de tecnologia.',
@@ -1033,6 +1095,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 89,
+        exigeGraduacao: 'flexivel',
         proximoPasso: 'Abordar liderança de Fidelização / B2B do Grupo OLX no LinkedIn pós-inscrição',
         observacoes: 'Inscrição realizada com CV ATS calibrado para retenção, LTV e parcerias B2B. Posição de Especialista sem gestão de equipe, 100% remota.',
         descricaoVaga: 'Prospectar, negociar e gerir parceiros de benefícios B2B, estruturar regras e governança do programa de fidelização, construir business case com métricas de LTV, retenção, churn e capacitar o time comercial (enablement).',
@@ -1050,6 +1113,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 82,
+        exigeGraduacao: 'nao_informado',
         proximoPasso: 'Conectar com liderança de Marketing/Produto da Gaudium antes da candidatura',
         observacoes: 'Scale-up brasileira B2B SaaS (fundada no RJ), operação 100% remota. Sinergia com posicionamento B2B, campanhas de adoção e storytelling orientado a dados.',
         descricaoVaga: 'Product Marketing Sênior B2B SaaS, posicionamento de produto, campanhas de adoção e retenção, enablement comercial e análise de métricas de funil.',
@@ -1067,6 +1131,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 82,
+        exigeGraduacao: 'flexivel',
         proximoPasso: 'Abordar lideranças de Parcerias/Growth no LinkedIn pós-inscrição',
         observacoes: 'Vaga aderente à experiência de Parcerias/Growth na Pluga e Academia do Universitário.',
         descricaoVaga: 'Parcerias Estratégicas e Canais B2B SaaS, e-commerce, ecossistema de parceiros, co-marketing, governança e crescimento.',
@@ -1075,7 +1140,7 @@
             id: 'cnt-nuvem-1',
             nome: 'Head de Parcerias & Ecossistema - Nuvemshop',
             papel: 'Decisor / Hiring Manager',
-            linkedinUrl: 'https://www.linkedin.com/search/results/people/?keywords=Nuvemshop%20Parcerias%20Ecossistema',
+            linkedinUrl: 'https://www.linkedin.com/company/nuvemshop/people/?keywords=Parcerias%20Partnerships',
             estagio: 'Identificado',
             dataContato: '2026-11-13',
             notas: 'Mapear liderança direta da vertical de Strategic Partnerships & Channels.',
@@ -1084,7 +1149,7 @@
             id: 'cnt-nuvem-2',
             nome: 'Talent Acquisition Sênior - Nuvemshop',
             papel: 'Recruiter / Talent',
-            linkedinUrl: 'https://www.linkedin.com/search/results/people/?keywords=Nuvemshop%20Talent%20Acquisition%20Growth',
+            linkedinUrl: 'https://www.linkedin.com/company/nuvemshop/people/?keywords=Talent%20Acquisition',
             estagio: 'Convite Enviado',
             dataContato: '2026-11-13',
             notas: 'Conexão enviada logo após submissão da candidatura na Inhire.',
@@ -1103,6 +1168,7 @@
         modelo: 'Remoto',
         contratacao: 'PJ',
         aderencia: 96,
+        exigeGraduacao: 'flexivel',
         proximoPasso: 'Conectar com C-Level / Head de Receita antes da aplicação formal',
         observacoes: 'Republicada em 11/11/2026 (aberta até jan/2027). Posição de especialista sem gestão de pessoas. Construção de canal B2B SaaS do zero e relacionamento institucional. Contratação PJ.',
         descricaoVaga: 'Alliances & Partnerships Lead B2B SaaS, construção de canal de parcerias estratégicas do zero, governança, co-marketing e relacionamento institucional.',
@@ -1120,6 +1186,7 @@
         modelo: 'Remoto',
         contratacao: 'CLT',
         aderencia: 88,
+        exigeGraduacao: 'concluida',
         proximoPasso: 'Avaliar aderência ao viés enterprise e inglês avançado',
         observacoes: 'Foco em ISVs, integradoras e Co-sell LATAM.',
         descricaoVaga: 'Strategic Partner Manager LATAM, ecossistema B2B SaaS, ISVs, canais e co-marketing.',
@@ -1137,6 +1204,7 @@
         modelo: 'Remoto',
         contratacao: 'PJ',
         aderencia: 84,
+        exigeGraduacao: 'nao_informado',
         proximoPasso: 'Comparar escopo com vaga de Alliances Lead',
         observacoes: 'Forte interface com área de Parcerias. Contratação PJ.',
         descricaoVaga: 'Growth B2B SaaS SLG e PLG, aquisição, funil, OKRs, dados e parcerias.',
@@ -1150,8 +1218,10 @@
     // =========================================================================
     let jobs = [];
     let viewMode = 'kanban'; // 'kanban' | 'table' | 'radar'
+    let scoreMode = 'general'; // 'general' | 'gupy'
     let activeDrawerJobId = null;
     let activeDrawerTab = 'details'; // 'details' | 'ats' | 'networking'
+    let activeAtsSubView = 'gupy'; // 'gupy' | 'resume' | 'letter'
     let editingContactId = null;
 
     let discardDraft = {
@@ -1173,6 +1243,92 @@
     let draggedJobId = null;
     let confirmCallback = null;
     let cloudSyncTimer = null;
+
+    // =========================================================================
+    // DUAL SCORING ENGINE: GENERAL EXECUTIVE FIT VS. GUPY GAIA ATS PROBABILITY
+    // =========================================================================
+    function inferEducationRequirement(job) {
+      const text = `${job.vaga || ''} ${job.observacoes || ''} ${job.descricaoVaga || ''}`.toLowerCase();
+      if (/superior completo|gradua[cç][aã]o completa|bacharelado completo|diploma/.test(text)) {
+        return 'concluida';
+      }
+      if (/cursando|em andamento|superior completo ou cursando/.test(text)) {
+        return 'flexivel';
+      }
+      return 'nao_informado';
+    }
+
+    function calculateGupyScore(job) {
+      const text = `${job.vaga || ''} ${job.observacoes || ''} ${job.descricaoVaga || ''}`
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      // Pillar 1: Experience & PLN Semantic Alignment (max 50)
+      const coreTerms = [
+        'parceria', 'partnerships', 'alliances', 'canais', 'channel',
+        'b2b', 'saas', 'co-marketing', 'comarketing', 'growth',
+        'fidelizacao', 'retencao', 'ltv', 'churn', 'engajamento',
+        'onboarding', 'governanca', 'tiers', 'crm', 'notion',
+        'metabase', 'kpi', 'okr', 'pipeline', 'abm', 'ecossistema',
+        'comunidade', 'eventos', 'stakeholder', 'enablement', 'negociacao'
+      ];
+      let hits = 0;
+      coreTerms.forEach((term) => {
+        if (text.includes(term)) hits += 1;
+      });
+      const expScore = Math.min(50, 38 + Math.min(12, hits * 2));
+
+      // Pillar 2: Academic Formation — Administração UERJ "Em andamento" (max 20)
+      const eduReq = job.exigeGraduacao || inferEducationRequirement(job);
+      let eduScore = 15;
+      let eduNote = 'Adm. UERJ (Em andamento) — peso neutro/parcial na Gupy';
+      if (eduReq === 'concluida') {
+        eduScore = 9;
+        eduNote = '⚠️ Vaga exige Superior Completo; UERJ "Em andamento" reduz score';
+      } else if (eduReq === 'flexivel') {
+        eduScore = 19;
+        eduNote = '✓ Formação em Administração UERJ totalmente aderente';
+      }
+
+      // Pillar 3: Conquistas, Mentorias & Habilidades 30/30 (max 15)
+      const skillsScore = 14;
+
+      // Pillar 4: Distância / Localidade (max 10)
+      const modelo = job.modelo || 'Remoto';
+      const distScore = modelo === 'Remoto' || modelo === 'Híbrido RJ' ? 10 : 4;
+
+      // Pillar 5: Indicação / Referral tracked in Mini-CRM (max 5)
+      const hasReferral = (job.contatos || []).some((c) => c.estagio === 'Indicação / Call Feita');
+      const refScore = hasReferral ? 5 : 0;
+
+      const total = Math.max(0, Math.min(100, Math.round(expScore + eduScore + skillsScore + distScore + refScore)));
+
+      return {
+        total,
+        breakdown: {
+          expScore,
+          eduScore,
+          eduNote,
+          skillsScore,
+          distScore,
+          refScore,
+          hasReferral,
+        },
+      };
+    }
+
+    function getDisplayedScore(job) {
+      if (scoreMode === 'gupy') {
+        return calculateGupyScore(job).total;
+      }
+      return Number(job.aderencia) || 0;
+    }
+
+    function setScoreMode(mode) {
+      scoreMode = mode === 'gupy' ? 'gupy' : 'general';
+      render();
+    }
 
     // =========================================================================
     // GITHUB GIST CLOUD SYNC (PC <-> MOBILE REAL-TIME PERSISTENCE)
@@ -1454,6 +1610,9 @@
           : 'Remoto',
         contratacao: item.contratacao === 'PJ' ? 'PJ' : 'CLT',
         aderencia: Math.max(0, Math.min(100, Number(item.aderencia) || 0)),
+        exigeGraduacao: ['flexivel', 'concluida', 'nao_informado'].includes(item.exigeGraduacao)
+          ? item.exigeGraduacao
+          : inferEducationRequirement(item),
         proximoPasso: item.proximoPasso ? String(item.proximoPasso) : '',
         observacoes: item.observacoes ? String(item.observacoes) : '',
         descricaoVaga: item.descricaoVaga ? String(item.descricaoVaga) : '',
@@ -1670,7 +1829,7 @@
 
       const avgMatch =
         total > 0
-          ? Math.round(jobs.reduce((acc, j) => acc + (Number(j.aderencia) || 0), 0) / total)
+          ? Math.round(jobs.reduce((acc, j) => acc + getDisplayedScore(j), 0) / total)
           : 0;
 
       const allContacts = jobs.flatMap((j) => j.contatos || []);
@@ -1692,7 +1851,11 @@
         jobs.filter((j) => j.status === 'Inscrito').length
       } inscrito(s)`;
 
+      document.getElementById('kpiAvgMatchTitle').textContent =
+        scoreMode === 'gupy' ? 'Média Match Gupy (IA)' : 'Média de Aderência';
       document.getElementById('kpiAvgMatch').textContent = `${avgMatch}%`;
+      document.getElementById('kpiAvgMatchSub').textContent =
+        scoreMode === 'gupy' ? 'algoritmo Gaia + formação' : 'fit executivo geral';
 
       document.getElementById('kpiContacts').textContent = allContacts.length;
       document.getElementById('kpiContactsSub').textContent = `${engagedContacts} já abordados`;
@@ -1710,6 +1873,21 @@
     }
 
     function updateNavigationUI() {
+      const btnGen = document.getElementById('btnScoreModeGeneral');
+      const btnGupy = document.getElementById('btnScoreModeGupy');
+      if (btnGen && btnGupy) {
+        btnGen.className = `px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+          scoreMode === 'general'
+            ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 shadow-2xs'
+            : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+        }`;
+        btnGupy.className = `px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer ${
+          scoreMode === 'gupy'
+            ? 'bg-teal-600 text-white shadow-2xs'
+            : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+        }`;
+      }
+
       const tabs = [
         { id: 'btnViewKanban', mode: 'kanban' },
         { id: 'btnViewTable', mode: 'table' },
@@ -1754,19 +1932,19 @@
     }
 
     // =========================================================================
-    // 1. KANBAN VIEW (7 COLUMNS)
+    // 1. KANBAN VIEW (7 COMPACT COLUMNS)
     // =========================================================================
     function renderKanban(container, filteredJobs) {
       const columnsToRender = filters.status === 'ALL' ? STATUS_LIST : [filters.status];
 
       container.innerHTML = `
         <div class="w-full overflow-x-auto pb-4">
-          <div class="inline-flex items-start gap-4 min-w-full">
+          <div class="inline-flex items-start gap-3.5 min-w-full">
             ${columnsToRender
               .map((status) => {
                 const colJobs = filteredJobs
                   .filter((j) => j.status === status)
-                  .sort((a, b) => (Number(b.aderencia) || 0) - (Number(a.aderencia) || 0));
+                  .sort((a, b) => getDisplayedScore(b) - getDisplayedScore(a));
                 const style = STATUS_STYLES[status] || STATUS_STYLES['Mapeada'];
 
                 return `
@@ -1775,17 +1953,17 @@
                     ondragover="handleDragOver(event)"
                     ondragleave="handleDragLeave(event)"
                     ondrop="handleDrop(event, '${escapeHTML(status)}')"
-                    class="kanban-col w-[300px] sm:w-[320px] shrink-0 overflow-hidden bg-zinc-100/80 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3 flex flex-col gap-3 min-h-[440px] transition-colors"
+                    class="kanban-col w-[290px] sm:w-[310px] shrink-0 overflow-hidden bg-zinc-100/80 dark:bg-zinc-900/70 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-2.5 flex flex-col gap-2.5 min-h-[420px] transition-colors"
                   >
                     <!-- Column Header -->
-                    <div class="px-2 py-1.5 rounded-lg border ${style.headerBg} flex items-center justify-between gap-2">
+                    <div class="px-2.5 py-1.5 rounded-lg border ${style.headerBg} flex items-center justify-between gap-2">
                       <div class="flex items-center gap-2 min-w-0">
                         <span class="w-2 h-2 rounded-full shrink-0 ${style.dot}"></span>
                         <h3 class="text-xs font-bold tracking-tight text-zinc-800 dark:text-zinc-200 truncate">
                           ${escapeHTML(status)}
                         </h3>
                       </div>
-                      <span class="px-2 py-0.5 rounded-full text-xs font-bold tabular-nums bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shrink-0">
+                      <span class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700 shrink-0">
                         ${colJobs.length}
                       </span>
                     </div>
@@ -1795,7 +1973,7 @@
                       ${
                         colJobs.length === 0
                           ? `<div class="flex-1 border border-dashed border-zinc-300/80 dark:border-zinc-800 rounded-lg p-4 flex items-center justify-center text-center text-xs text-zinc-400 dark:text-zinc-600">
-                               Arraste um card para "${escapeHTML(status)}"
+                               Arraste para "${escapeHTML(status)}"
                              </div>`
                           : colJobs.map((job) => renderKanbanCard(job)).join('')
                       }
@@ -1811,22 +1989,19 @@
 
     function getMiniCrmSummaryText(job) {
       const contacts = job.contatos || [];
-      if (contacts.length === 0) {
-        return '👥 0 contatos';
-      }
+      if (contacts.length === 0) return '👥 0';
       const inProgressCount = contacts.filter((c) => c.estagio !== 'Identificado').length;
-      const label = contacts.length === 1 ? '1 contato' : `${contacts.length} contatos`;
-      if (inProgressCount === 0) {
-        return `👥 ${label}`;
-      }
-      return `👥 ${label} · ${inProgressCount} ${
-        inProgressCount === 1 ? 'abordado' : 'abordados'
-      }`;
+      return inProgressCount > 0
+        ? `👥 ${contacts.length} (${inProgressCount} ativo)`
+        : `👥 ${contacts.length}`;
     }
 
     function renderKanbanCard(job) {
       const safeUrl = sanitizeUrl(job.link);
-      const matchClass = getAdherenceBadgeClass(job.aderencia);
+      const displayedScore = getDisplayedScore(job);
+      const generalScore = Number(job.aderencia) || 0;
+      const gupyData = calculateGupyScore(job);
+      const matchClass = getAdherenceBadgeClass(displayedScore);
       const isDiscarded = job.status === 'Descartada / Declinada';
       const contactsCount = (job.contatos || []).length;
 
@@ -1839,12 +2014,12 @@
             isDiscarded
               ? 'border-rose-200/80 dark:border-rose-900/50'
               : 'border-zinc-200/90 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
-          } rounded-xl p-3.5 shadow-xs hover:shadow-md transition cursor-grab active:cursor-grabbing space-y-2.5"
+          } rounded-xl p-3 shadow-xs hover:shadow-md transition cursor-grab active:cursor-grabbing space-y-2"
         >
           <!-- Top Row: Company + Platform + Match % -->
-          <div class="flex items-start justify-between gap-2 min-w-0">
+          <div class="flex items-center justify-between gap-2 min-w-0">
             <div class="flex items-center gap-1.5 min-w-0 flex-1">
-              <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300 truncate">
+              <span class="text-xs font-bold text-zinc-700 dark:text-zinc-200 truncate">
                 ${escapeHTML(job.empresa)}
               </span>
               ${
@@ -1856,80 +2031,74 @@
               }
             </div>
 
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums border shrink-0 ${matchClass}">
-              ${Number(job.aderencia) || 0}% fit
-            </span>
+            <div class="flex items-center gap-1 shrink-0" title="Geral: ${generalScore}% | Gupy Gaia Est.: ${gupyData.total}%">
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums border ${matchClass}">
+                ${scoreMode === 'gupy' ? '🤖 ' : ''}${displayedScore}%
+              </span>
+              <span class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 tabular-nums">
+                ${scoreMode === 'gupy' ? `(${generalScore}%)` : `🤖${gupyData.total}%`}
+              </span>
+            </div>
           </div>
 
           <!-- Job Title -->
           <h4
             onclick="openJobDrawer('${escapeHTML(job.id)}', 'details')"
-            class="text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug break-words hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition"
+            class="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-50 leading-snug break-words hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition"
           >
             ${escapeHTML(job.vaga)}
           </h4>
 
-          <!-- Metadata Pills -->
-          <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span class="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium">
-              ${escapeHTML(job.modelo || 'Remoto')}
-            </span>
-            <span class="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium">
-              ${escapeHTML(job.contratacao || 'CLT')}
-            </span>
-            ${
-              job.dataInscricao
-                ? `<span class="px-2 py-0.5 rounded-md bg-cyan-50/80 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300 border border-cyan-200/70 dark:border-cyan-800/60 tabular-nums">
-                     Inscrito: ${formatDateBR(job.dataInscricao)}
-                   </span>`
-                : ''
-            }
-          </div>
+          <!-- Compact Metadata + Quick Actions Row -->
+          <div class="flex items-center justify-between gap-1.5 pt-0.5">
+            <div class="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+              <span class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-medium">${escapeHTML(job.modelo || 'Remoto')}</span>
+              <span class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 font-medium">${escapeHTML(job.contratacao || 'CLT')}</span>
+              ${
+                job.dataInscricao
+                  ? `<span class="px-1.5 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 tabular-nums">${formatDateBR(job.dataInscricao).slice(0, 5)}</span>`
+                  : ''
+              }
+            </div>
 
-          <!-- Mini-CRM & CV ATS Quick Actions Bar -->
-          <div class="flex items-center justify-between gap-1.5 min-w-0 bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-lg px-2 py-1.5">
-            <span class="text-[11px] font-medium text-indigo-800 dark:text-indigo-300 truncate min-w-0">
-              ${escapeHTML(getMiniCrmSummaryText(job))}
-            </span>
             <div class="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onclick="openJobDrawer('${escapeHTML(job.id)}', 'ats')"
-                title="Gerar / Ver Currículo ATS calibrado para esta vaga"
-                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-teal-600 hover:bg-teal-500 text-white shadow-2xs transition cursor-pointer"
+                title="Abrir Currículo ATS + Blocos Gupy"
+                class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-600 hover:bg-teal-500 text-white transition cursor-pointer"
               >
-                <span>CV ATS</span>
+                CV ATS
               </button>
               <button
                 type="button"
                 onclick="openJobDrawer('${escapeHTML(job.id)}', 'networking')"
-                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs transition cursor-pointer"
+                title="Abrir Networking & Mini-CRM"
+                class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition cursor-pointer"
               >
-                <span>Networking</span>
-                ${contactsCount > 0 ? `<span class="opacity-85">(${contactsCount})</span>` : ''}
+                Net ${contactsCount > 0 ? `(${contactsCount})` : ''}
               </button>
             </div>
           </div>
 
-          <!-- Discarded Reason Block OR Next Step Box -->
+          <!-- Discarded Reason OR 1-Line Next Step -->
           ${
             isDiscarded
               ? renderCardDiscardBlock(job)
               : job.proximoPasso
-              ? `<div class="bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200/70 dark:border-zinc-800/80 rounded-lg px-2.5 py-1.5 text-xs text-zinc-600 dark:text-zinc-300 flex items-start gap-1.5 min-w-0">
-                   <span class="text-indigo-500 font-bold mt-0.5 shrink-0">&rarr;</span>
-                   <span class="line-clamp-2 break-words">${escapeHTML(job.proximoPasso)}</span>
+              ? `<div class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate pt-0.5" title="${escapeHTML(job.proximoPasso)}">
+                   <span class="text-indigo-500 font-bold">&rarr;</span> ${escapeHTML(job.proximoPasso)}
                  </div>`
               : ''
           }
 
           <!-- Card Footer: Quick Status Select + Link + Edit + Quick Discard -->
-          <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-1.5 min-w-0">
+          <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-1.5 min-w-0">
             <select
               aria-label="Mover etapa de ${escapeHTML(job.empresa)}"
               onchange="quickChangeStatus('${escapeHTML(job.id)}', this.value)"
               onclick="event.stopPropagation()"
-              class="text-[11px] font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-2 py-1 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500 cursor-pointer min-w-0 flex-1 max-w-[145px]"
+              class="text-[11px] font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md px-1.5 py-1 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500 cursor-pointer min-w-0 flex-1 max-w-[140px]"
             >
               ${STATUS_LIST.map(
                 (st) =>
@@ -1948,7 +2117,7 @@
                        rel="noopener noreferrer"
                        onclick="event.stopPropagation()"
                        title="Abrir link da vaga"
-                       class="p-1.5 rounded-md text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                       class="p-1 rounded-md text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                      >
                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                      </a>`
@@ -1958,7 +2127,7 @@
                 type="button"
                 onclick="openJobDrawer('${escapeHTML(job.id)}', 'details')"
                 title="Editar vaga"
-                class="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                class="p-1 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
               </button>
@@ -1966,7 +2135,7 @@
                 type="button"
                 onclick="triggerDiscardFlow('${escapeHTML(job.id)}')"
                 title="${isDiscarded ? 'Editar motivo do descarte' : 'Descartar / Declinar vaga'}"
-                class="p-1.5 rounded-md text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                class="p-1 rounded-md text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               </button>
@@ -1980,8 +2149,8 @@
       const d = job.descarte;
       if (!d) {
         return `
-          <div class="bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 rounded-lg p-2.5 flex items-center justify-between gap-2">
-            <span class="text-[11px] text-rose-700 dark:text-rose-300 font-medium">Motivo não registrado</span>
+          <div class="bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-800/60 rounded-lg p-2 flex items-center justify-between gap-2">
+            <span class="text-[11px] text-rose-700 dark:text-rose-300 font-medium">Sem motivo</span>
             <button
               type="button"
               onclick="openDiscardModal('${escapeHTML(job.id)}')"
@@ -1995,11 +2164,11 @@
 
       const originBadge =
         d.origem === 'company'
-          ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">🏢 Empresa declinou</span>'
+          ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">🏢 Empresa</span>'
           : '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">🙋‍♂️ Eu declinei</span>';
 
       return `
-        <div class="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/60 rounded-lg p-2.5 space-y-1.5">
+        <div class="bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/60 rounded-lg p-2 space-y-1">
           <div class="flex items-center justify-between gap-1">
             ${originBadge}
             <button
@@ -2007,26 +2176,12 @@
               onclick="openDiscardModal('${escapeHTML(job.id)}')"
               class="text-[10px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
             >
-              Editar motivo
+              Editar
             </button>
           </div>
           ${
-            d.categorias && d.categorias.length > 0
-              ? `<div class="flex flex-wrap gap-1">
-                   ${d.categorias
-                     .map(
-                       (cat) =>
-                         `<span class="px-1.5 py-0.2 rounded text-[10px] font-medium bg-white/90 dark:bg-zinc-900 text-rose-700 dark:text-rose-300 border border-rose-200/70 dark:border-rose-800/60">${escapeHTML(
-                           cat
-                         )}</span>`
-                     )
-                     .join('')}
-                 </div>`
-              : ''
-          }
-          ${
             d.motivacao
-              ? `<p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug line-clamp-3">${escapeHTML(
+              ? `<p class="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug line-clamp-2">${escapeHTML(
                   d.motivacao
                 )}</p>`
               : ''
@@ -2133,7 +2288,7 @@
       } else if (newStatus === 'Inscrição') {
         openJobDrawer(jobId, 'ats');
         showToast(
-          `📄 Currículo ATS calibrado gerado para ${jobs[idx].empresa}! Revise e confirme para mover para "Inscrito".`
+          `📄 Currículo ATS calibrado gerado para ${jobs[idx].empresa}!`
         );
       } else if (newStatus === 'Descartada / Declinada') {
         openDiscardModal(jobId);
@@ -2168,13 +2323,13 @@
       const sorted = [...filteredJobs].sort((a, b) => {
         const dir = sortConfig.direction === 'asc' ? 1 : -1;
         if (sortConfig.key === 'aderencia') {
-          return ((Number(a.aderencia) || 0) - (Number(b.aderencia) || 0)) * dir;
+          return (getDisplayedScore(a) - getDisplayedScore(b)) * dir;
         }
         if (sortConfig.key === 'empresa') {
           return a.empresa.localeCompare(b.empresa, 'pt-BR') * dir;
         }
         if (sortConfig.key === 'status') {
-          return STATUS_LIST.indexOf(a.status) - STATUS_LIST.indexOf(b.status);
+          return (STATUS_LIST.indexOf(a.status) - STATUS_LIST.indexOf(b.status)) * dir;
         }
         if (sortConfig.key === 'dataInscricao') {
           const da = a.dataInscricao || '0000-00-00';
@@ -2212,10 +2367,10 @@
                   </th>
                   <th class="py-3 px-4">
                     <button type="button" onclick="toggleSort('aderencia')" class="inline-flex items-center hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer">
-                      Aderência ${getSortIndicator('aderencia')}
+                      ${scoreMode === 'gupy' ? 'Match Gupy (Geral)' : 'Aderência (Gupy)'} ${getSortIndicator('aderencia')}
                     </button>
                   </th>
-                  <th class="py-3 px-4">Networking</th>
+                  <th class="py-3 px-4">CV ATS &amp; Net</th>
                   <th class="py-3 px-4">Modelo / Contrato</th>
                   <th class="py-3 px-4">
                     <button type="button" onclick="toggleSort('dataInscricao')" class="inline-flex items-center hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer">
@@ -2230,13 +2385,15 @@
                 ${sorted
                   .map((job) => {
                     const safeUrl = sanitizeUrl(job.link);
-                    const matchClass = getAdherenceBadgeClass(job.aderencia);
-                    const statusStyle = STATUS_STYLES[job.status] || STATUS_STYLES['Mapeada'];
+                    const displayedScore = getDisplayedScore(job);
+                    const generalScore = Number(job.aderencia) || 0;
+                    const gupyScore = calculateGupyScore(job).total;
+                    const matchClass = getAdherenceBadgeClass(displayedScore);
                     const isDiscarded = job.status === 'Descartada / Declinada';
 
                     return `
                       <tr class="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition">
-                        <td class="py-3.5 px-4 max-w-xs">
+                        <td class="py-3 px-4 max-w-xs">
                           <div class="flex items-center gap-2">
                             <span class="font-bold text-zinc-900 dark:text-zinc-50">${escapeHTML(job.empresa)}</span>
                             ${
@@ -2255,42 +2412,52 @@
                           </div>
                         </td>
 
-                        <td class="py-3.5 px-4 whitespace-nowrap">
+                        <td class="py-3 px-4 whitespace-nowrap">
+                          <select
+                            aria-label="Etapa de ${escapeHTML(job.empresa)}"
+                            onchange="quickChangeStatus('${escapeHTML(job.id)}', this.value)"
+                            class="text-xs font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2 py-1 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+                          >
+                            ${STATUS_LIST.map(
+                              (st) =>
+                                `<option value="${escapeHTML(st)}" ${
+                                  st === job.status ? 'selected' : ''
+                                }>${escapeHTML(st)}</option>`
+                            ).join('')}
+                          </select>
+                        </td>
+
+                        <td class="py-3 px-4 whitespace-nowrap">
+                          <div class="flex items-center gap-1.5">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold tabular-nums border ${matchClass}">
+                              ${scoreMode === 'gupy' ? '🤖 ' : ''}${displayedScore}%
+                            </span>
+                            <span class="text-[11px] text-zinc-400 tabular-nums">
+                              ${scoreMode === 'gupy' ? `${generalScore}%` : `🤖 ${gupyScore}%`}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td class="py-3 px-4 whitespace-nowrap">
                           <div class="flex items-center gap-1.5">
                             <button
                               type="button"
                               onclick="openJobDrawer('${escapeHTML(job.id)}', 'ats')"
-                              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 hover:bg-teal-100 dark:hover:bg-teal-900/50 transition cursor-pointer"
+                              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/60 hover:bg-teal-100 transition cursor-pointer"
                             >
                               <span>📄 CV ATS</span>
                             </button>
                             <button
                               type="button"
                               onclick="openJobDrawer('${escapeHTML(job.id)}', 'networking')"
-                              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer"
+                              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 transition cursor-pointer"
                             >
                               <span>${escapeHTML(getMiniCrmSummaryText(job))}</span>
                             </button>
                           </div>
                         </td>
 
-                        <td class="py-3.5 px-4 whitespace-nowrap">
-                          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold tabular-nums border ${matchClass}">
-                            ${Number(job.aderencia) || 0}%
-                          </span>
-                        </td>
-
-                        <td class="py-3.5 px-4 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onclick="openJobDrawer('${escapeHTML(job.id)}', 'networking')"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-50/80 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition cursor-pointer"
-                          >
-                            <span>${escapeHTML(getMiniCrmSummaryText(job))}</span>
-                          </button>
-                        </td>
-
-                        <td class="py-3.5 px-4 whitespace-nowrap">
+                        <td class="py-3 px-4 whitespace-nowrap">
                           <div class="flex items-center gap-1.5 text-xs">
                             <span class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium">
                               ${escapeHTML(job.modelo || 'Remoto')}
@@ -2301,37 +2468,23 @@
                           </div>
                         </td>
 
-                        <td class="py-3.5 px-4 whitespace-nowrap text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
+                        <td class="py-3 px-4 whitespace-nowrap text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
                           ${formatDateBR(job.dataInscricao)}
                         </td>
 
-                        <td class="py-3.5 px-4 max-w-xs">
+                        <td class="py-3 px-4 max-w-xs">
                           ${
                             isDiscarded && job.descarte
-                              ? `<div class="space-y-1">
-                                   <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                     job.descarte.origem === 'company'
-                                       ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                       : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                                   }">
-                                     ${
-                                       job.descarte.origem === 'company'
-                                         ? '🏢 Empresa declinou'
-                                         : '🙋‍♂️ Eu declinei'
-                                     }
-                                   </span>
-                                   <p class="text-xs text-zinc-700 dark:text-zinc-300 line-clamp-2">${escapeHTML(
-                                     job.descarte.motivacao ||
-                                       (job.descarte.categorias || []).join(', ')
-                                   )}</p>
-                                 </div>`
-                              : `<p class="text-xs text-zinc-700 dark:text-zinc-300 line-clamp-2">${escapeHTML(
-                                   job.proximoPasso || '—'
-                                 )}</p>`
+                              ? `<p class="text-xs text-rose-600 dark:text-rose-400 line-clamp-1">${escapeHTML(
+                                  job.descarte.motivacao || (job.descarte.categorias || []).join(', ')
+                                )}</p>`
+                              : `<p class="text-xs text-zinc-700 dark:text-zinc-300 line-clamp-1">${escapeHTML(
+                                  job.proximoPasso || '—'
+                                )}</p>`
                           }
                         </td>
 
-                        <td class="py-3.5 px-4 whitespace-nowrap text-right">
+                        <td class="py-3 px-4 whitespace-nowrap text-right">
                           <div class="inline-flex items-center justify-end gap-1">
                             ${
                               safeUrl
@@ -2411,7 +2564,7 @@
                 Retroalimentação do Radar &amp; Calibragem de Perfil
               </h2>
               <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                Cada vaga descartada por você ou declinada por uma empresa vira dado estruturado para refinar sua skill no Gemini e aumentar a precisão do radar diário das 08:00.
+                Cada vaga descartada vira dado estruturado para refinar sua skill no Gemini e aumentar a precisão das próximas buscas.
               </p>
             </div>
 
@@ -2420,51 +2573,36 @@
               onclick="copyRadarCalibrationPrompt()"
               class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-bold bg-indigo-500 hover:bg-indigo-400 text-white shadow-lg shadow-indigo-500/25 transition cursor-pointer"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-              <span>Copiar Pacote de Retroalimentação para o Gemini</span>
+              <span>Copiar Pacote de Retroalimentação</span>
             </button>
           </div>
 
           <!-- Metrics & Category Distribution Grid -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <!-- Origin Breakdown Card -->
             <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
               <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
                 Origem dos Encerramentos
               </h3>
-
               <div class="grid grid-cols-2 gap-3">
                 <div class="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/50">
                   <div class="text-xs font-medium text-rose-700 dark:text-rose-300">🙋‍♂️ Eu declinei</div>
                   <div class="font-display text-2xl font-bold text-rose-700 dark:text-rose-300 mt-1 tabular-nums">
                     ${byCandidate.length}
                   </div>
-                  <div class="text-[11px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">
-                    Filtros de escopo/modelo
-                  </div>
                 </div>
-
                 <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/50">
                   <div class="text-xs font-medium text-amber-700 dark:text-amber-300">🏢 Empresa declinou</div>
                   <div class="font-display text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1 tabular-nums">
                     ${byCompany.length}
                   </div>
-                  <div class="text-[11px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
-                    Sinais de posicionamento
-                  </div>
                 </div>
               </div>
-
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Dica: quando você declina, ajustamos os <strong>filtros negativos</strong> do radar. Quando a empresa declina, ajustamos o <strong>posicionamento do currículo e pitch</strong>.
-              </p>
             </div>
 
-            <!-- Top Patterns Bar Chart -->
             <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                  Padrões Mais Frequentes de Descarte / Declínio
+                  Padrões Mais Frequentes
                 </h3>
                 <span class="text-xs text-zinc-400">${discardedJobs.length} registro(s)</span>
               </div>
@@ -2472,7 +2610,7 @@
               ${
                 sortedCategories.length === 0
                   ? `<div class="py-8 text-center text-xs text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                       Nenhuma vaga descartada ainda. Sempre que descartar ou receber uma negativa, mova o card para <strong>"Descartada / Declinada"</strong> para alimentar este painel.
+                       Nenhuma vaga descartada ainda.
                      </div>`
                   : `<div class="space-y-3">
                        ${sortedCategories
@@ -2484,8 +2622,8 @@
                                  <span class="font-medium text-zinc-700 dark:text-zinc-200">${escapeHTML(cat)}</span>
                                  <span class="font-bold tabular-nums text-zinc-600 dark:text-zinc-400">${count}x</span>
                                </div>
-                               <div class="w-full h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                 <div class="h-full bg-gradient-to-r from-rose-500 to-indigo-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                               <div class="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                 <div class="h-full bg-gradient-to-r from-rose-500 to-indigo-500 rounded-full" style="width: ${pct}%"></div>
                                </div>
                              </div>
                            `;
@@ -2494,79 +2632,6 @@
                      </div>`
               }
             </div>
-          </div>
-
-          <!-- Full Chronological Learnings List -->
-          <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
-            <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
-              Histórico Detalhado de Decisões &amp; Feedbacks
-            </h3>
-
-            ${
-              discardedJobs.length === 0
-                ? `<p class="text-xs text-zinc-500 dark:text-zinc-400">
-                     Seu histórico de aprendizados aparecerá aqui automaticamente assim que você registrar o primeiro descarte ou feedback de processo.
-                   </p>`
-                : `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     ${discardedJobs
-                       .map((job) => {
-                         const d = job.descarte || {
-                           origem: 'candidate',
-                           categorias: [],
-                           motivacao: 'Motivo detalhado pendente.',
-                           dataDescarte: '',
-                         };
-                         return `
-                           <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/50 space-y-2.5">
-                             <div class="flex items-start justify-between gap-2">
-                               <div>
-                                 <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400">${escapeHTML(
-                                   job.empresa
-                                 )}</span>
-                                 <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-50">${escapeHTML(
-                                   job.vaga
-                                 )}</h4>
-                               </div>
-                               <button
-                                 type="button"
-                                 onclick="openDiscardModal('${escapeHTML(job.id)}')"
-                                 class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-indigo-500 transition cursor-pointer shrink-0"
-                               >
-                                 Editar
-                               </button>
-                             </div>
-
-                             <div class="flex flex-wrap items-center gap-1.5">
-                               <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                                 d.origem === 'company'
-                                   ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                   : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                               }">
-                                 ${
-                                   d.origem === 'company'
-                                     ? '🏢 A empresa me declinou'
-                                     : '🙋‍♂️ Eu declinei / descartei'
-                                 }
-                               </span>
-                               ${(d.categorias || [])
-                                 .map(
-                                   (cat) =>
-                                     `<span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300">${escapeHTML(
-                                       cat
-                                     )}</span>`
-                                 )
-                                 .join('')}
-                             </div>
-
-                             <p class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200/70 dark:border-zinc-800">
-                               ${escapeHTML(d.motivacao || 'Sem motivação registrada.')}
-                             </p>
-                           </div>
-                         `;
-                       })
-                       .join('')}
-                   </div>`
-            }
           </div>
         </div>
       `;
@@ -2577,11 +2642,8 @@
       const today = formatDateBR(getTodayISO());
 
       if (discardedJobs.length === 0) {
-        const emptyPrompt = `Olá Gemini! Quero revisar os critérios da minha skill profissional e da busca diária das 08:00 (foco em Parcerias Estratégicas, Channel Partnerships, Ecossistema B2B SaaS e Growth — Remoto ou Híbrido RJ). Ainda não tenho vagas descartadas registradas hoje (${today}), mas gostaria de validar meus filtros atuais.`;
-        copyToClipboard(
-          emptyPrompt,
-          'Prompt base copiado! Cole no chat do Gemini para revisar seu radar.'
-        );
+        const emptyPrompt = `Olá Gemini! Quero revisar os critérios da minha skill profissional (${today}). Ainda não tenho vagas descartadas registradas.`;
+        copyToClipboard(emptyPrompt, 'Prompt base copiado!');
         return;
       }
 
@@ -2590,33 +2652,14 @@
           const d = j.descarte || {};
           const origemLabel =
             d.origem === 'company' ? 'A empresa me declinou' : 'Eu declinei / descartei';
-          const cats =
-            d.categorias && d.categorias.length > 0
-              ? d.categorias.join(', ')
-              : 'Não categorizado';
-          const mot = d.motivacao || 'Sem detalhamento adicional.';
-          return `${idx + 1}. **${j.empresa} — ${j.vaga}** (Aderência estimada: ${
-            j.aderencia
-          }% | Modelo: ${j.modelo} | Contratação: ${j.contratacao})
-   - Origem: ${origemLabel}
-   - Categorias: ${cats}
-   - Motivação / Feedback: ${mot}`;
+          const cats = (d.categorias || []).join(', ') || 'Não categorizado';
+          return `${idx + 1}. **${j.empresa} — ${j.vaga}** (${origemLabel}) | Categorias: ${cats} | Nota: ${d.motivacao || ''}`;
         })
-        .join('\n\n');
-
-      const fullPrompt = `Olá Gemini! Segue o pacote de retroalimentação do meu CRM de Vagas (${today}) para você atualizar a minha skill de perfil profissional e recalibrar o filtro da busca diária das 08:00:
-
-### Vagas Descartadas / Declinadas e Aprendizados:
-${itemsText}
-
-### O que preciso que você faça com esse histórico:
-1. Atualize os critérios de exclusão e priorização da minha skill para evitar oportunidades com os padrões que eu declinei.
-2. Se houver declínios por parte das empresas, sugira ajustes no meu posicionamento de currículo/pitch para as próximas vagas aderentes.
-3. Confirme os novos parâmetros que passarão a valer nas próximas buscas.`;
+        .join('\n');
 
       copyToClipboard(
-        fullPrompt,
-        'Pacote de Retroalimentação copiado! Cole no chat do Gemini para recalibrar seu radar.'
+        `Olá Gemini! Segue o pacote de retroalimentação do meu CRM (${today}):\n\n${itemsText}`,
+        'Pacote de Retroalimentação copiado!'
       );
     }
 
@@ -2638,13 +2681,14 @@ ${itemsText}
         const job = jobs.find((j) => j.id === jobId);
         if (!job) return;
 
+        const gupyScore = calculateGupyScore(job).total;
         titleEl.textContent = `${job.empresa} — ${job.vaga}`;
         subtitleEl.textContent = `${job.status} · ${job.modelo || 'Remoto'} · ${
           job.contratacao || 'CLT'
         }`;
-        matchBadge.textContent = `${job.aderencia}% fit`;
+        matchBadge.textContent = `${job.aderencia}% fit · 🤖 ${gupyScore}% Gupy`;
         matchBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-bold tabular-nums border ${getAdherenceBadgeClass(
-          job.aderencia
+          getDisplayedScore(job)
         )}`;
         matchBadge.classList.remove('hidden');
 
@@ -2659,9 +2703,12 @@ ${itemsText}
         document.getElementById('fieldContratacao').value = job.contratacao || 'CLT';
         document.getElementById('fieldAderencia').value =
           job.aderencia !== undefined ? job.aderencia : 85;
+        document.getElementById('fieldExigeGraduacao').value =
+          job.exigeGraduacao || inferEducationRequirement(job);
         document.getElementById('fieldProximoPasso').value = job.proximoPasso || '';
         document.getElementById('fieldObservacoes').value = job.observacoes || '';
         document.getElementById('fieldDescricaoVaga').value = job.descricaoVaga || '';
+        updateDrawerGupyLivePreview();
 
         if (job.status === 'Descartada / Declinada' && job.descarte) {
           discardSummaryBox.classList.remove('hidden');
@@ -2690,7 +2737,9 @@ ${itemsText}
         document.getElementById('fieldModelo').value = 'Remoto';
         document.getElementById('fieldContratacao').value = 'CLT';
         document.getElementById('fieldAderencia').value = 85;
+        document.getElementById('fieldExigeGraduacao').value = 'nao_informado';
         document.getElementById('fieldDescricaoVaga').value = '';
+        updateDrawerGupyLivePreview();
         discardSummaryBox.classList.add('hidden');
         leftActions.innerHTML = '';
       }
@@ -2782,6 +2831,7 @@ ${itemsText}
       let aderencia = parseInt(document.getElementById('fieldAderencia').value, 10);
       if (isNaN(aderencia)) aderencia = 0;
       aderencia = Math.max(0, Math.min(100, aderencia));
+      const exigeGraduacao = document.getElementById('fieldExigeGraduacao').value || 'nao_informado';
       const proximoPasso = document.getElementById('fieldProximoPasso').value.trim();
       const observacoes = document.getElementById('fieldObservacoes').value.trim();
       const descricaoVaga = document.getElementById('fieldDescricaoVaga').value.trim();
@@ -2806,6 +2856,7 @@ ${itemsText}
             modelo,
             contratacao,
             aderencia,
+            exigeGraduacao,
             proximoPasso,
             observacoes,
             descricaoVaga,
@@ -2824,6 +2875,7 @@ ${itemsText}
           modelo,
           contratacao,
           aderencia,
+          exigeGraduacao,
           proximoPasso,
           observacoes,
           descricaoVaga,
@@ -2860,8 +2912,29 @@ ${itemsText}
       persistJobFromForm(false);
     }
 
+    function updateDrawerGupyLivePreview() {
+      const valueEl = document.getElementById('drawerGupyLiveValue');
+      if (!valueEl) return;
+
+      const existingJob = activeDrawerJobId
+        ? jobs.find((j) => j.id === activeDrawerJobId)
+        : null;
+
+      const draftJob = {
+        vaga: document.getElementById('fieldVaga').value,
+        observacoes: document.getElementById('fieldObservacoes').value,
+        descricaoVaga: document.getElementById('fieldDescricaoVaga').value,
+        modelo: document.getElementById('fieldModelo').value,
+        exigeGraduacao: document.getElementById('fieldExigeGraduacao').value,
+        contatos: existingJob ? existingJob.contatos : [],
+      };
+
+      const gupy = calculateGupyScore(draftJob);
+      valueEl.textContent = `${gupy.total}%`;
+    }
+
     // =========================================================================
-    // ATS RESUME CALIBRATION ENGINE
+    // ATS RESUME CALIBRATION ENGINE (3 CLEAN READING SUB-VIEWS)
     // =========================================================================
     function detectJobAxis(job) {
       const text = `${job.vaga || ''} ${job.observacoes || ''} ${job.descricaoVaga || ''}`.toLowerCase();
@@ -2979,7 +3052,8 @@ ${itemsText}
       const cv = buildCalibratedAtsResume(job);
       const lines = [
         VERIFIED_CANDIDATE_FACTS.fullName,
-        VERIFIED_CANDIDATE_FACTS.location,
+        VERIFIED_CANDIDATE_FACTS.contactLine,
+        `LinkedIn: ${VERIFIED_CANDIDATE_FACTS.linkedin}`,
         cv.headline,
         '',
         'RESUMO PROFISSIONAL',
@@ -2995,18 +3069,18 @@ ${itemsText}
         lines.push('');
         lines.push(`${exp.role} | ${exp.company} (${exp.period}) — ${exp.location}`);
         exp.bullets.forEach((b) => {
-          lines.push(`- ${b.text}`);
+          lines.push(`• ${b.text}`);
         });
       });
 
       lines.push('');
-      lines.push('MENTORIAS & ECOSSISTEMA');
-      lines.push(`- ${VERIFIED_CANDIDATE_FACTS.mentoring}`);
+      lines.push('MENTORIAS, VOLUNTARIADO & ECOSSISTEMA');
+      lines.push(`• ${VERIFIED_CANDIDATE_FACTS.mentoring}`);
 
       lines.push('');
       lines.push('FORMAÇÃO ACADÊMICA & IDIOMAS');
-      lines.push(`- ${VERIFIED_CANDIDATE_FACTS.education}`);
-      lines.push(`- Idiomas: ${VERIFIED_CANDIDATE_FACTS.languages}`);
+      lines.push(`• ${VERIFIED_CANDIDATE_FACTS.education}`);
+      lines.push(`• Idiomas: ${VERIFIED_CANDIDATE_FACTS.languages}`);
 
       lines.push('');
       lines.push('FERRAMENTAS, DADOS & STACK TECNOLÓGICA');
@@ -3015,72 +3089,132 @@ ${itemsText}
       return lines.join('\n');
     }
 
+    function setAtsSubView(subView) {
+      activeAtsSubView = subView;
+      renderAtsResumePanel();
+    }
+
+    function copySingleExperienceBlock(jobId, expIndex) {
+      const job = jobs.find((j) => j.id === jobId);
+      if (!job) return;
+      const cv = buildCalibratedAtsResume(job);
+      const exp = cv.experiences[expIndex];
+      if (!exp) return;
+
+      const text = exp.bullets.map((b) => `• ${b.text}`).join('\n');
+      copyToClipboard(text, `Descrição de "${exp.company}" copiada para colar na Gupy!`);
+    }
+
+    function copySummaryBlock(jobId) {
+      const job = jobs.find((j) => j.id === jobId);
+      if (!job) return;
+      const cv = buildCalibratedAtsResume(job);
+      copyToClipboard(cv.summary, 'Resumo Executivo copiado para colar na Gupy!');
+    }
+
     function renderAtsResumePanel() {
       const panel = document.getElementById('atsPanel');
       const job = jobs.find((j) => j.id === activeDrawerJobId);
       if (!job) return;
 
       const cv = buildCalibratedAtsResume(job);
+      const gupy = calculateGupyScore(job);
       const isAlreadySubmitted = job.status === 'Inscrito';
 
       panel.innerHTML = `
-        <!-- Status Action Banner: Inscrição -> Inscrito -->
-        <div class="p-4 rounded-xl border ${
+        <!-- Dual Score Diagnostic Card (General Fit vs. Gupy Gaia Algorithm) -->
+        <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Fit Executivo Geral</span>
+                <span class="font-display text-lg font-extrabold text-indigo-600 dark:text-indigo-400 tabular-nums">${Number(job.aderencia) || 0}%</span>
+              </div>
+              <div class="h-7 w-px bg-zinc-200 dark:bg-zinc-800"></div>
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">🤖 Prob. Match Gupy (Gaia)</span>
+                <span class="font-display text-lg font-extrabold text-teal-600 dark:text-teal-400 tabular-nums">${gupy.total}%</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1 text-[10px] font-semibold">
+              <span class="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">Exp/PLN: ${gupy.breakdown.expScore}/50</span>
+              <span class="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">Formação: ${gupy.breakdown.eduScore}/20</span>
+              <span class="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">Skills/Certs: ${gupy.breakdown.skillsScore}/15</span>
+              <span class="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">Local: ${gupy.breakdown.distScore}/10</span>
+              <span class="px-2 py-0.5 rounded ${gupy.breakdown.hasReferral ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800'}">Indicação: ${gupy.breakdown.refScore}/5</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+            <strong>Fator Formação:</strong> ${escapeHTML(gupy.breakdown.eduNote)} ${!gupy.breakdown.hasReferral ? '· <em>Dica: registrar uma indicação no Mini-CRM soma +5% no ranking da Gupy.</em>' : ''}
+          </p>
+        </div>
+
+        <!-- Compact Status + Primary Action Bar -->
+        <div class="p-3.5 rounded-xl border ${
           isAlreadySubmitted
             ? 'bg-cyan-50/80 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800'
             : 'bg-teal-50/90 dark:bg-teal-950/35 border-teal-200 dark:border-teal-800'
-        } flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="space-y-0.5">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider ${
-                isAlreadySubmitted
-                  ? 'text-cyan-700 dark:text-cyan-300'
-                  : 'text-teal-700 dark:text-teal-300'
-              }">
-                ${isAlreadySubmitted ? '✅ Candidatura Já Submetida' : '🎯 Etapa Atual: ' + escapeHTML(job.status)}
-              </span>
-            </div>
-            <p class="text-xs text-zinc-600 dark:text-zinc-300">
-              ${
-                isAlreadySubmitted
-                  ? `Inscrito em ${formatDateBR(job.dataInscricao)}. Você ainda pode baixar ou copiar esta versão ATS.`
-                  : 'Revise o currículo calibrado abaixo, envie na plataforma e confirme para avançar o card para "Inscrito".'
-              }
-            </p>
-          </div>
-
-          ${
-            !isAlreadySubmitted
-              ? `<button
-                   type="button"
-                   onclick="confirmApplicationSubmitted('${escapeHTML(job.id)}')"
-                   class="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition cursor-pointer"
-                 >
-                   <span>✅ Confirmar Inscrição &rarr; "Inscrito"</span>
-                 </button>`
-              : `<span class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 text-white">
-                   Status: Inscrito
-                 </span>`
-          }
-        </div>
-
-        <!-- Job Description Input for Live Keyword Recalibration -->
-        <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
-          <div class="flex items-center justify-between gap-2">
-            <label for="atsJdLiveInput" class="text-xs font-bold text-zinc-800 dark:text-zinc-200">
-              Descrição / Requisitos da Vaga (cole da Gupy/Inhire para refinar palavras-chave)
-            </label>
-            <span class="text-[11px] font-semibold text-teal-600 dark:text-teal-400">
-              Eixo: ${escapeHTML(cv.axis.label)}
+        } flex flex-wrap items-center justify-between gap-2.5">
+          <div class="text-xs">
+            <span class="font-bold ${
+              isAlreadySubmitted ? 'text-cyan-800 dark:text-cyan-300' : 'text-teal-800 dark:text-teal-300'
+            }">
+              ${isAlreadySubmitted ? `✅ Inscrito em ${formatDateBR(job.dataInscricao)}` : `🎯 Etapa: ${escapeHTML(job.status)}`}
+            </span>
+            <span class="text-zinc-600 dark:text-zinc-400 ml-1.5">
+              &bull; Eixo: <strong>${escapeHTML(cv.axis.label)}</strong>
             </span>
           </div>
-          <textarea
-            id="atsJdLiveInput"
-            rows="3"
-            placeholder="Cole aqui o texto da vaga para o motor cruzar os termos exatos com seus fatos verificados..."
-            class="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-teal-500"
-          >${escapeHTML(job.descricaoVaga || '')}</textarea>
-          <div class="flex flex-wrap items-center justify-between gap-2">
+
+          <div class="flex items-center gap-1.5">
+            ${
+              !isAlreadySubmitted
+                ? `<button
+                     type="button"
+                     onclick="confirmApplicationSubmitted('${escapeHTML(job.id)}')"
+                     class="px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-2xs transition cursor-pointer"
+                   >
+                     ✅ Confirmar Inscrição
+                   </button>`
+                : ''
+            }
+            <button
+              type="button"
+              onclick="copyCalibratedAtsText('${escapeHTML(job.id)}')"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition cursor-pointer"
+            >
+              Copiar CV
+            </button>
+            <button
+              type="button"
+              onclick="openPrintAtsWindow('${escapeHTML(job.id)}')"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 hover:border-teal-500 transition cursor-pointer"
+            >
+              PDF ATS
+            </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Keyword Calibrator -->
+        <details class="group rounded-xl bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800 p-3">
+          <summary class="cursor-pointer list-none flex items-center justify-between gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span>🔍 Palavras-Chave Detectadas (${cv.matchedKeywords.length})</span>
+              ${cv.matchedKeywords
+                .slice(0, 3)
+                .map(
+                  (kw) =>
+                    `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border border-teal-200/80 dark:border-teal-800/70">✓ ${escapeHTML(
+                      kw
+                    )}</span>`
+                )
+                .join('')}
+            </div>
+            <span class="text-[11px] text-teal-600 dark:text-teal-400 font-bold group-open:rotate-180 transition-transform">&#9662;</span>
+          </summary>
+
+          <div class="mt-3 pt-3 border-t border-zinc-200/70 dark:border-zinc-800 space-y-2.5">
             <div class="flex flex-wrap gap-1">
               ${cv.matchedKeywords
                 .map(
@@ -3091,58 +3225,146 @@ ${itemsText}
                 )
                 .join('')}
             </div>
-            <button
-              type="button"
-              onclick="recalibrateAtsFromTextarea('${escapeHTML(job.id)}')"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white transition cursor-pointer shrink-0"
-            >
-              Recalibrar Palavras-Chave
-            </button>
-          </div>
-        </div>
-
-        <!-- Export & Print Actions -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onclick="copyCalibratedAtsText('${escapeHTML(job.id)}')"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition cursor-pointer"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            <span>Copiar Texto Limpo (ATS)</span>
-          </button>
-
-          <button
-            type="button"
-            onclick="openPrintAtsWindow('${escapeHTML(job.id)}')"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 hover:border-teal-500 transition cursor-pointer"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            <span>Imprimir / Salvar PDF ATS</span>
-          </button>
-
-          <button
-            type="button"
-            onclick="copyGeminiAtsAuditPrompt('${escapeHTML(job.id)}')"
-            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition cursor-pointer"
-          >
-            <span>✨ Revisão Fina no Gemini</span>
-          </button>
-        </div>
-
-        <!-- Clean Single-Column ATS Document Preview -->
-        <article class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 sm:p-6 shadow-xs space-y-4 text-zinc-800 dark:text-zinc-200">
-          <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
-            <div class="flex items-center justify-between gap-2 flex-wrap">
-              <h3 class="font-display text-base sm:text-lg font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-                ${escapeHTML(VERIFIED_CANDIDATE_FACTS.fullName)}
-              </h3>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
-                100% Fatos Verificados &bull; Formato ATS
-              </span>
+            <textarea
+              id="atsJdLiveInput"
+              rows="3"
+              placeholder="Cole aqui a descrição completa da vaga (Gupy / Inhire) para recalibrar os bullets..."
+              class="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-teal-500"
+            >${escapeHTML(job.descricaoVaga || '')}</textarea>
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                onclick="copyGeminiAtsAuditPrompt('${escapeHTML(job.id)}')"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 cursor-pointer"
+              >
+                ✨ Auditar no Gemini
+              </button>
+              <button
+                type="button"
+                onclick="recalibrateAtsFromTextarea('${escapeHTML(job.id)}')"
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 dark:bg-zinc-800 text-white cursor-pointer"
+              >
+                Recalibrar Agora
+              </button>
             </div>
-            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              ${escapeHTML(VERIFIED_CANDIDATE_FACTS.location)}
+          </div>
+        </details>
+
+        <!-- Clean Sub-Navigation: 1) Blocos Gupy | 2) CV Completo | 3) Carta -->
+        <div class="inline-flex p-1 rounded-xl bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 w-full">
+          <button
+            type="button"
+            onclick="setAtsSubView('gupy')"
+            class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeAtsSubView === 'gupy'
+                ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-300 shadow-2xs'
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }"
+          >
+            ⚡ Blocos para Gupy
+          </button>
+          <button
+            type="button"
+            onclick="setAtsSubView('resume')"
+            class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeAtsSubView === 'resume'
+                ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-300 shadow-2xs'
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }"
+          >
+            📄 CV Completo (Skill + Gupy)
+          </button>
+          <button
+            type="button"
+            onclick="setAtsSubView('letter')"
+            class="flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              activeAtsSubView === 'letter'
+                ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-300 shadow-2xs'
+                : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+            }"
+          >
+            ✉️ Carta &amp; Pitch
+          </button>
+        </div>
+
+        <!-- SUB-VIEW CONTENT -->
+        ${
+          activeAtsSubView === 'gupy'
+            ? renderGupyBlocksSubView(job, cv)
+            : activeAtsSubView === 'resume'
+            ? renderFullAtsDocumentSubView(cv)
+            : renderCoverLetterSubView(job, cv)
+        }
+      `;
+    }
+
+    function renderGupyBlocksSubView(job, cv) {
+      return `
+        <div class="space-y-2.5">
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+            Clique em <strong>Copiar</strong> ao lado de cada bloco para colar diretamente nos campos fixos da <strong>Gupy / Inhire</strong>:
+          </p>
+
+          <!-- Bloco Resumo Gupy -->
+          <div class="p-3.5 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">1. Resumo / Apresentação Pessoal</span>
+              <button
+                type="button"
+                onclick="copySummaryBlock('${escapeHTML(job.id)}')"
+                class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 cursor-pointer"
+              >
+                Copiar Resumo
+              </button>
+            </div>
+            <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+              ${escapeHTML(cv.summary)}
+            </p>
+          </div>
+
+          <!-- Blocos por Empresa (Accordion para leitura leve) -->
+          ${cv.experiences
+            .map(
+              (exp, idx) => `
+                <details ${idx === 0 ? 'open' : ''} class="group rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                  <summary class="cursor-pointer list-none px-3.5 py-2.5 flex items-center justify-between gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-900/60">
+                    <div class="min-w-0">
+                      <span class="text-xs font-bold text-zinc-900 dark:text-zinc-100">${escapeHTML(exp.company)}</span>
+                      <span class="text-[11px] text-zinc-500 dark:text-zinc-400 ml-1.5">&bull; ${escapeHTML(exp.role)} (${escapeHTML(exp.period)})</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onclick="event.preventDefault(); event.stopPropagation(); copySingleExperienceBlock('${escapeHTML(job.id)}', ${idx})"
+                        class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 cursor-pointer"
+                      >
+                        Copiar Bullets
+                      </button>
+                      <span class="text-xs text-zinc-400 group-open:rotate-180 transition-transform">&#9662;</span>
+                    </div>
+                  </summary>
+                  <div class="px-3.5 pb-3 pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+                    <ul class="list-disc pl-4 space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                      ${exp.bullets.map((b) => `<li>${escapeHTML(b.text)}</li>`).join('')}
+                    </ul>
+                  </div>
+                </details>
+              `
+            )
+            .join('')}
+        </div>
+      `;
+    }
+
+    function renderFullAtsDocumentSubView(cv) {
+      return `
+        <article class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4 text-zinc-800 dark:text-zinc-200">
+          <div class="border-b border-zinc-200 dark:border-zinc-800 pb-3">
+            <h3 class="font-display text-base font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
+              ${escapeHTML(VERIFIED_CANDIDATE_FACTS.fullName)}
+            </h3>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              ${escapeHTML(VERIFIED_CANDIDATE_FACTS.contactLine)}
             </p>
             <p class="text-xs font-bold text-teal-700 dark:text-teal-300 mt-1.5">
               ${escapeHTML(cv.headline)}
@@ -3150,29 +3372,19 @@ ${itemsText}
           </div>
 
           <div class="space-y-1">
-            <h4 class="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Resumo Profissional Calibrado
-            </h4>
-            <p class="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
-              ${escapeHTML(cv.summary)}
-            </p>
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Resumo</h4>
+            <p class="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">${escapeHTML(cv.summary)}</p>
           </div>
 
           <div class="space-y-3">
-            <h4 class="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Experiência Profissional (Ordenada por Aderência à Vaga)
-            </h4>
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Experiência Consolidada (Skill + Gupy)</h4>
             ${cv.experiences
               .map(
                 (exp) => `
                   <div class="space-y-1">
                     <div class="flex flex-wrap items-baseline justify-between gap-1">
-                      <span class="text-xs font-bold text-zinc-900 dark:text-zinc-50">
-                        ${escapeHTML(exp.role)} — ${escapeHTML(exp.company)}
-                      </span>
-                      <span class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        ${escapeHTML(exp.period)} | ${escapeHTML(exp.location)}
-                      </span>
+                      <span class="text-xs font-bold text-zinc-900 dark:text-zinc-50">${escapeHTML(exp.role)} — ${escapeHTML(exp.company)}</span>
+                      <span class="text-[11px] text-zinc-500">${escapeHTML(exp.period)}</span>
                     </div>
                     <ul class="list-disc pl-4 space-y-1 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                       ${exp.bullets.map((b) => `<li>${escapeHTML(b.text)}</li>`).join('')}
@@ -3183,43 +3395,32 @@ ${itemsText}
               .join('')}
           </div>
 
-          <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 gap-2 text-xs">
-            <div>
-              <span class="font-bold text-zinc-900 dark:text-zinc-100">Mentorias &amp; Ecossistema:</span>
-              <span class="text-zinc-700 dark:text-zinc-300">${escapeHTML(VERIFIED_CANDIDATE_FACTS.mentoring)}</span>
-            </div>
-            <div>
-              <span class="font-bold text-zinc-900 dark:text-zinc-100">Formação &amp; Idiomas:</span>
-              <span class="text-zinc-700 dark:text-zinc-300">${escapeHTML(VERIFIED_CANDIDATE_FACTS.education)} &bull; ${escapeHTML(VERIFIED_CANDIDATE_FACTS.languages)}</span>
-            </div>
-            <div>
-              <span class="font-bold text-zinc-900 dark:text-zinc-100">Stack &amp; Ferramentas:</span>
-              <span class="text-zinc-700 dark:text-zinc-300">${escapeHTML(cv.tools.join(' • '))}</span>
-            </div>
+          <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs">
+            <div><strong>Mentorias &amp; Voluntariado:</strong> ${escapeHTML(VERIFIED_CANDIDATE_FACTS.mentoring)}</div>
+            <div><strong>Formação &amp; Idiomas:</strong> ${escapeHTML(VERIFIED_CANDIDATE_FACTS.education)} &bull; ${escapeHTML(VERIFIED_CANDIDATE_FACTS.languages)}</div>
+            <div><strong>Stack &amp; Ferramentas:</strong> ${escapeHTML(cv.tools.join(' • '))}</div>
           </div>
         </article>
+      `;
+    }
 
-        <!-- Cover Letter & Gupy/Inhire Screening Pitch -->
-        <section class="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/80 dark:border-indigo-900/60 rounded-xl p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+    function renderCoverLetterSubView(job, cv) {
+      return `
+        <section class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
             <div>
-              <h4 class="font-display text-xs sm:text-sm font-bold text-indigo-950 dark:text-indigo-200">
-                ✉️ Carta de Apresentação &amp; Resposta Rápida (Gupy / Inhire / Email)
-              </h4>
-              <p class="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
-                Texto pronto para campos abertos de candidatura, baseado estritamente nos seus resultados reais.
-              </p>
+              <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100">Carta de Apresentação &amp; Pitch</h4>
+              <p class="text-[11px] text-zinc-500">Pronta para colar na Gupy, Inhire ou mensagem direta.</p>
             </div>
             <button
               type="button"
               onclick="copyCoverLetterText('${escapeHTML(job.id)}')"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs transition cursor-pointer shrink-0"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer"
             >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              <span>Copiar Carta</span>
+              Copiar Carta
             </button>
           </div>
-          <div class="bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-zinc-800 rounded-lg p-3.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">${escapeHTML(buildCoverLetterText(job, cv))}</div>
+          <div class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-3.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">${escapeHTML(buildCoverLetterText(job, cv))}</div>
         </section>
       `;
     }
@@ -3343,7 +3544,8 @@ Rio de Janeiro, RJ (Disponível para Remoto ou Híbrido RJ)`;
         </head>
         <body>
           <h1>${escapeHTML(VERIFIED_CANDIDATE_FACTS.fullName)}</h1>
-          <p style="color:#444;">${escapeHTML(VERIFIED_CANDIDATE_FACTS.location)}</p>
+          <p style="color:#444;">${escapeHTML(VERIFIED_CANDIDATE_FACTS.contactLine)}</p>
+          <p style="color:#444;">LinkedIn: ${escapeHTML(VERIFIED_CANDIDATE_FACTS.linkedin)} | ${escapeHTML(VERIFIED_CANDIDATE_FACTS.location)}</p>
           <p style="font-weight:700; margin-top:6px;">${escapeHTML(cv.headline)}</p>
 
           <h2>Resumo Profissional</h2>
@@ -3384,11 +3586,7 @@ Abaixo está o rascunho do meu currículo gerado com 100% dos meus fatos verific
 ${job.descricaoVaga || job.observacoes || job.vaga}
 
 ### Meu Currículo Base (Fatos Verificados):
-${resumeText}
-
-### O que preciso:
-1. Aponte se alguma palavra-chave crítica da vaga pode ser espelhada com ainda mais naturalidade no Resumo ou nos bullets reais acima.
-2. Sugira 2 respostas curtas (baseadas estritamente nos meus fatos) para eventuais perguntas de triagem da ${job.empresa}.`;
+${resumeText}`;
 
       copyToClipboard(
         prompt,
@@ -3459,7 +3657,7 @@ ${resumeText}
           subtitle: isGrowthFocus
             ? 'Head / Gerente / Liderança de Growth, ABM ou Fidelização'
             : 'Head / Diretor(a) / Liderança de Parcerias, Alianças ou Ecossistema',
-          why: 'É quem define o escopo real da cadeira e aprova o perfil final. Abordar antes ou logo após a inscrição tira seu currículo da fila padrão do ATS.',
+          why: 'Define o escopo real da vaga e aprova o perfil final.',
           linkedinQuery: `${company} ${
             isGrowthFocus ? 'Head Growth OR Marketing' : 'Head Parcerias OR Partnerships'
           }`,
@@ -3470,7 +3668,7 @@ ${resumeText}
           title: `Liderança de Receita / Negócios (${company})`,
           roleBadge: 'C-Level / Founder',
           subtitle: 'CRO, VP Comercial, Diretor(a) de Receita ou Negócios B2B',
-          why: 'Em operações B2B SaaS, canais e parcerias nascem para destravar CAC, expansão de LTV e co-sell. Executivos de receita valorizam perfis "builders" com visão de negócio.',
+          why: 'Patrocina frentes de canais para destravar CAC, expansão de LTV e co-sell.',
           linkedinQuery: `${company} CRO OR Comercial OR Receita`,
           message: `Olá [Nome], tudo bem? Tenho acompanhado o posicionamento da ${company} e me identifiquei bastante com o desafio da vaga de ${roleTitle}. Tenho histórico construindo canais B2B SaaS e parcerias institucionais de ponta a ponta (da tese de partner-fit à execução de co-marketing e acompanhamento de KPIs de funil). Seria um prazer conectar por aqui e acompanhar os próximos passos da ${company}.`,
         },
@@ -3479,7 +3677,7 @@ ${resumeText}
           title: `Par Estratégico do Time (${company})`,
           roleBadge: 'Par / Time',
           subtitle: 'Especialista / Analista Sênior de Parcerias, Canais, ABM ou Comunidade',
-          why: 'Pares trazem contexto real da cultura do time, ferramentas usadas no dia a dia e frequentemente têm link direto de indicação interna (referral).',
+          why: 'Traz contexto real do time e pode gerar indicação interna (referral).',
           linkedinQuery: `${company} Especialista Parcerias OR Growth`,
           message: `Olá [Nome], tudo bem? Vi seu trabalho na frente de crescimento/ecossistema da ${company} e achei muito interessante a forma como vocês vêm posicionando o produto. Apliquei para a cadeira de ${roleTitle} — venho de uma trajetória de 8+ anos estruturando programas de parceiros e co-marketing em SaaS B2B. Se fizer sentido, adoraria ouvir sua perspectiva sobre a dinâmica do time por aí!`,
         },
@@ -3487,8 +3685,8 @@ ${resumeText}
           key: 'talent-recruiter',
           title: `Talent Acquisition / Recruiter (${company})`,
           roleBadge: 'Recruiter / Talent',
-          subtitle: 'Tech / Business Recruiter responsável por posições de Negócios e Marketing',
-          why: 'Garante visibilidade rápida da sua aderência (8+ anos em canais B2B SaaS, governança de ecossistema e dados) na triagem inicial.',
+          subtitle: 'Tech / Business Recruiter responsável por Negócios e Marketing',
+          why: 'Garante leitura prioritária do seu perfil na triagem.',
           linkedinQuery: `${company} Talent Acquisition OR Recruiter`,
           message: `Olá [Nome], tudo bem? Acabei de me candidatar para a vaga de ${roleTitle} na ${company} e quis me apresentar brevemente. Atuo há mais de 8 anos com Parcerias Estratégicas, Canais e Growth B2B SaaS, estruturando ecossistemas de parceiros, governança comercial e ações conjuntas de geração de pipeline. Fico à disposição caso precise de algum detalhe complementar sobre minha trajetória!`,
         },
@@ -3507,104 +3705,91 @@ ${resumeText}
         : null;
 
       panel.innerHTML = `
-        <!-- BLOCK A: SUGGESTED LINKEDIN OUTREACH OPTIONS -->
-        <section class="space-y-3">
+        <!-- BLOCK A: COMPACT PERSONAS -->
+        <section class="space-y-2.5">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                Opções Sugeridas de Abordagem (LinkedIn &amp; X-Ray)
+                4 Radares de Abordagem (${escapeHTML(job.empresa)})
               </h3>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                Busca direta na aba <strong>Pessoas da empresa</strong> + <strong>Google X-Ray</strong> para <strong>${escapeHTML(job.empresa)}</strong>
+              <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Clique em <strong>Pessoas</strong> ou <strong>X-Ray</strong> para encontrar o perfil e em <strong>Ver Script</strong> para copiar a mensagem.
               </p>
             </div>
 
             <button
               type="button"
               onclick="copyGeminiPeopleLookupPrompt('${escapeHTML(job.id)}')"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 dark:bg-violet-950/60 dark:hover:bg-violet-900/60 dark:text-violet-300 dark:border-violet-800 transition cursor-pointer"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800 transition cursor-pointer"
             >
-              <span>✨ Pedir nomes reais ao Gemini</span>
+              <span>✨ Pedir nomes ao Gemini</span>
             </button>
           </div>
 
-          <div class="grid grid-cols-1 gap-3">
+          <div class="grid grid-cols-1 gap-2">
             ${personas
               .map((p, idx) => {
                 const links = buildSmartLinkedInLinks(job.empresa, p.key, p.linkedinQuery);
                 return `
-                  <div class="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 space-y-2.5">
-                    <div class="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <div class="flex items-center gap-2">
-                          <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                            Persona ${idx + 1}
+                  <details class="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/60 p-3">
+                    <summary class="cursor-pointer list-none flex flex-wrap items-center justify-between gap-2">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                            #${idx + 1}
                           </span>
-                          <h4 class="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                            ${escapeHTML(p.title)}
+                          <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-50 truncate">
+                            ${escapeHTML(p.roleBadge)}
                           </h4>
                         </div>
-                        <p class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                           ${escapeHTML(p.subtitle)}
                         </p>
                       </div>
 
-                      <div class="flex items-center gap-1.5 flex-wrap">
+                      <div class="flex items-center gap-1.5 shrink-0">
                         <a
                           href="${escapeHTML(links.companyPeopleUrl)}"
                           target="_blank"
                           rel="noopener noreferrer"
-                          title="Abre direto a aba Pessoas da página oficial da empresa no LinkedIn"
-                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-sky-600 hover:bg-sky-500 text-white transition"
+                          onclick="event.stopPropagation()"
+                          class="px-2 py-1 rounded-md text-[11px] font-semibold bg-sky-600 hover:bg-sky-500 text-white transition"
                         >
-                          <span>${links.hasCompanyPage ? 'Pessoas na Empresa' : 'LinkedIn'}</span>
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                          Pessoas
                         </a>
-
                         <a
                           href="${escapeHTML(links.googleXrayUrl)}"
                           target="_blank"
                           rel="noopener noreferrer"
-                          title="Busca booleana via Google direto nos perfis /in/ da empresa"
-                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition"
+                          onclick="event.stopPropagation()"
+                          class="px-2 py-1 rounded-md text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition"
                         >
-                          <span>X-Ray Perfis</span>
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                          X-Ray
                         </a>
-
                         <button
                           type="button"
-                          onclick="addSuggestedPersonaToMiniCrm('${escapeHTML(job.id)}', ${idx})"
-                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-500 transition cursor-pointer"
+                          onclick="event.preventDefault(); event.stopPropagation(); copyPersonaScript('${escapeHTML(job.id)}', ${idx})"
+                          class="px-2 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 border border-zinc-200 dark:border-zinc-700 cursor-pointer"
                         >
-                          <span>+ Mini-CRM</span>
+                          Copiar Pitch
                         </button>
-                      </div>
-                    </div>
-
-                    <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      <strong>Por que abordar:</strong> ${escapeHTML(p.why)}
-                    </p>
-
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 rounded-lg p-3 space-y-2">
-                      <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                          Script sugerido de abordagem
-                        </span>
                         <button
                           type="button"
-                          onclick="copyPersonaScript('${escapeHTML(job.id)}', ${idx})"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition cursor-pointer"
+                          onclick="event.preventDefault(); event.stopPropagation(); addSuggestedPersonaToMiniCrm('${escapeHTML(job.id)}', ${idx})"
+                          class="px-2 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 cursor-pointer"
                         >
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                          <span>Copiar Mensagem</span>
+                          + CRM
                         </button>
                       </div>
-                      <p class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
+                    </summary>
+
+                    <div class="mt-2.5 pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 space-y-1.5">
+                      <p><strong>Foco:</strong> ${escapeHTML(p.why)}</p>
+                      <p class="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 italic">
                         "${escapeHTML(p.message)}"
                       </p>
                     </div>
-                  </div>
+                  </details>
                 `;
               })
               .join('')}
@@ -3612,125 +3797,82 @@ ${resumeText}
         </section>
 
         <!-- BLOCK B: MINI-CRM DE STAKEHOLDERS DA VAGA -->
-        <section class="pt-5 border-t border-zinc-200 dark:border-zinc-800 space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                Mini-CRM de Stakeholders da Vaga (${contacts.length})
-              </h3>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                Registre pessoas reais mapeadas e acompanhe o nível de avanço com cada contato.
-              </p>
-            </div>
-          </div>
+        <section class="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+          <h3 class="font-display text-sm font-bold text-zinc-900 dark:text-zinc-50">
+            Mini-CRM da Vaga (${contacts.length})
+          </h3>
 
-          <!-- Quick Add / Edit Stakeholder Form -->
-          <form onsubmit="saveStakeholderForm(event)" class="p-4 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/50 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200">
-                ${editingContact ? `Editando contato: ${escapeHTML(editingContact.nome)}` : '+ Mapear novo contato / stakeholder'}
-              </span>
-              ${
-                editingContact
-                  ? `<button type="button" onclick="cancelEditStakeholder()" class="text-[11px] font-semibold text-zinc-500 hover:underline cursor-pointer">Cancelar edição</button>`
-                  : ''
-              }
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Nome da pessoa *</label>
-                <input
-                  type="text"
-                  id="stkNome"
-                  required
-                  value="${editingContact ? escapeHTML(editingContact.nome) : ''}"
-                  placeholder="Ex: Ana Silva (Head de Parcerias)"
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Papel na decisão</label>
-                <select
-                  id="stkPapel"
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                >
-                  ${CONTACT_ROLES.map(
-                    (r) =>
-                      `<option value="${escapeHTML(r)}" ${
-                        editingContact && editingContact.papel === r ? 'selected' : ''
-                      }>${escapeHTML(r)}</option>`
-                  ).join('')}
-                </select>
-              </div>
+          <form onsubmit="saveStakeholderForm(event)" class="p-3.5 rounded-xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/50 space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input
+                type="text"
+                id="stkNome"
+                required
+                value="${editingContact ? escapeHTML(editingContact.nome) : ''}"
+                placeholder="Nome da pessoa *"
+                class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              />
+              <select
+                id="stkPapel"
+                class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              >
+                ${CONTACT_ROLES.map(
+                  (r) =>
+                    `<option value="${escapeHTML(r)}" ${
+                      editingContact && editingContact.papel === r ? 'selected' : ''
+                    }>${escapeHTML(r)}</option>`
+                ).join('')}
+              </select>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Nível / Estágio</label>
-                <select
-                  id="stkEstagio"
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                >
-                  ${CONTACT_STAGES.map(
-                    (st) =>
-                      `<option value="${escapeHTML(st)}" ${
-                        editingContact && editingContact.estagio === st ? 'selected' : ''
-                      }>${escapeHTML(st)}</option>`
-                  ).join('')}
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Último contato</label>
-                <input
-                  type="date"
-                  id="stkData"
-                  value="${editingContact ? escapeHTML(editingContact.dataContato) : getTodayISO()}"
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">URL do LinkedIn</label>
-                <input
-                  type="url"
-                  id="stkLinkedin"
-                  value="${editingContact ? escapeHTML(editingContact.linkedinUrl) : ''}"
-                  placeholder="https://linkedin.com/in/..."
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <select
+                id="stkEstagio"
+                class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              >
+                ${CONTACT_STAGES.map(
+                  (st) =>
+                    `<option value="${escapeHTML(st)}" ${
+                      editingContact && editingContact.estagio === st ? 'selected' : ''
+                    }>${escapeHTML(st)}</option>`
+                ).join('')}
+              </select>
+              <input
+                type="date"
+                id="stkData"
+                value="${editingContact ? escapeHTML(editingContact.dataContato) : getTodayISO()}"
+                class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              />
+              <input
+                type="url"
+                id="stkLinkedin"
+                value="${editingContact ? escapeHTML(editingContact.linkedinUrl) : ''}"
+                placeholder="URL LinkedIn"
+                class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              />
             </div>
 
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
-              <div class="flex-1">
-                <label class="block text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Notas da interação</label>
-                <input
-                  type="text"
-                  id="stkNotas"
-                  value="${editingContact ? escapeHTML(editingContact.notas) : ''}"
-                  placeholder="Ex: Aceitou convite; respondeu pedindo CV atualizado; agendamos papo de 15 min..."
-                  class="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="stkNotas"
+                value="${editingContact ? escapeHTML(editingContact.notas) : ''}"
+                placeholder="Notas rápidas da interação..."
+                class="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg"
+              />
               <button
                 type="submit"
-                class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs transition cursor-pointer shrink-0"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shrink-0"
               >
-                ${editingContact ? 'Atualizar Contato' : 'Salvar Contato'}
+                ${editingContact ? 'Atualizar' : 'Salvar'}
               </button>
             </div>
           </form>
 
-          <!-- Stakeholders List -->
           ${
             contacts.length === 0
-              ? `<div class="p-6 text-center text-xs text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                   Nenhum contato mapeado para esta vaga ainda. Use o botão <strong>"+ Mini-CRM"</strong> nas personas acima ou cadastre manualmente no formulário.
-                 </div>`
-              : `<div class="space-y-2.5">
+              ? `<p class="text-xs text-zinc-400 text-center py-3">Nenhum contato salvo ainda.</p>`
+              : `<div class="space-y-2">
                    ${contacts
                      .map((c) => {
                        const stageBadge =
@@ -3738,79 +3880,34 @@ ${resumeText}
                        const safeLinkedin = sanitizeUrl(c.linkedinUrl);
 
                        return `
-                         <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/90 flex flex-col gap-2">
-                           <div class="flex flex-wrap items-start justify-between gap-2">
-                             <div class="min-w-0">
-                               <div class="flex items-center gap-2 flex-wrap">
-                                 <span class="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-50">
-                                   ${escapeHTML(c.nome)}
-                                 </span>
-                                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                                   ${escapeHTML(c.papel)}
-                                 </span>
-                               </div>
-                               ${
-                                 c.dataContato
-                                   ? `<span class="text-[11px] text-zinc-400 dark:text-zinc-500">Última interação: ${formatDateBR(
-                                       c.dataContato
-                                     )}</span>`
-                                   : ''
-                               }
-                             </div>
-
+                         <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-2">
+                           <div class="min-w-0">
                              <div class="flex items-center gap-1.5">
-                               <select
-                                 aria-label="Nível de contato de ${escapeHTML(c.nome)}"
-                                 onchange="quickUpdateStakeholderStage('${escapeHTML(c.id)}', this.value)"
-                                 class="text-[11px] font-semibold rounded-full px-2.5 py-1 border cursor-pointer focus:outline-none ${stageBadge}"
-                               >
-                                 ${CONTACT_STAGES.map(
-                                   (st) =>
-                                     `<option value="${escapeHTML(st)}" ${
-                                       st === c.estagio ? 'selected' : ''
-                                     }>${escapeHTML(st)}</option>`
-                                 ).join('')}
-                               </select>
-
-                               ${
-                                 safeLinkedin
-                                   ? `<a
-                                        href="${escapeHTML(safeLinkedin)}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        title="Abrir LinkedIn"
-                                        class="p-1.5 rounded-lg text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition"
-                                      >
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                      </a>`
-                                   : ''
-                               }
-                               <button
-                                 type="button"
-                                 onclick="startEditStakeholder('${escapeHTML(c.id)}')"
-                                 title="Editar contato"
-                                 class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
-                               >
-                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                               </button>
-                               <button
-                                 type="button"
-                                 onclick="removeStakeholder('${escapeHTML(c.id)}')"
-                                 title="Remover contato"
-                                 class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
-                               >
-                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                               </button>
+                               <span class="text-xs font-bold text-zinc-900 dark:text-zinc-50">${escapeHTML(c.nome)}</span>
+                               <span class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">${escapeHTML(c.papel)}</span>
                              </div>
+                             ${c.notas ? `<p class="text-[11px] text-zinc-500 truncate mt-0.5">${escapeHTML(c.notas)}</p>` : ''}
                            </div>
 
-                           ${
-                             c.notas
-                               ? `<p class="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-950 px-2.5 py-1.5 rounded-lg border border-zinc-200/60 dark:border-zinc-800/80">
-                                    ${escapeHTML(c.notas)}
-                                  </p>`
-                               : ''
-                           }
+                           <div class="flex items-center gap-1">
+                             <select
+                               onchange="quickUpdateStakeholderStage('${escapeHTML(c.id)}', this.value)"
+                               class="text-[11px] font-semibold rounded-full px-2 py-0.5 border cursor-pointer ${stageBadge}"
+                             >
+                               ${CONTACT_STAGES.map(
+                                 (st) =>
+                                   `<option value="${escapeHTML(st)}" ${
+                                     st === c.estagio ? 'selected' : ''
+                                   }>${escapeHTML(st)}</option>`
+                               ).join('')}
+                             </select>
+                             ${
+                               safeLinkedin
+                                 ? `<a href="${escapeHTML(safeLinkedin)}" target="_blank" rel="noopener noreferrer" class="p-1 text-sky-600">🔗</a>`
+                                 : ''
+                             }
+                             <button type="button" onclick="removeStakeholder('${escapeHTML(c.id)}')" class="p-1 text-zinc-400 hover:text-rose-600 cursor-pointer">&times;</button>
+                           </div>
                          </div>
                        `;
                      })
@@ -3838,14 +3935,14 @@ ${resumeText}
         linkedinUrl: links.companyPeopleUrl,
         estagio: 'Identificado',
         dataContato: getTodayISO(),
-        notas: `Persona sugerida (${p.subtitle}). Use o link da aba Pessoas ou X-Ray para localizar o perfil exato.`,
+        notas: `Persona sugerida (${p.subtitle}).`,
       });
 
       saveJobs();
       render();
       renderNetworkingPanel();
       updateDrawerContactBadge();
-      showToast(`"${p.roleBadge}" adicionado ao Mini-CRM de ${job.empresa}!`);
+      showToast(`"${p.roleBadge}" adicionado ao Mini-CRM!`);
     }
 
     function copyPersonaScript(jobId, personaIdx) {
@@ -3861,19 +3958,11 @@ ${resumeText}
       const job = jobs.find((j) => j.id === jobId);
       if (!job) return;
 
-      const prompt = `Olá Gemini! Estou avançando na estratégia de abordagem direta para a oportunidade **${job.vaga}** na **${job.empresa}**.
-
-Poderia pesquisar na web e no LinkedIn os nomes reais e cargos atuais das principais lideranças dessa empresa no Brasil/LATAM para eu abordar, especificamente:
-1. Head / Diretor(a) / VP de Parcerias, Alianças, Ecossistema ou Growth;
-2. CRO / VP Comercial / Diretor(a) de Receita ou Founder;
-3. Especialistas / Gerentes Sêniores do time de Parcerias ou Growth;
-4. Talent Acquisition / Recruiter de negócios.
-
-Para cada nome encontrado, me traga o cargo exato, o contexto recente da área na ${job.empresa} e adapte rapidamente um gancho de conexão para o meu perfil (8+ anos em canais B2B SaaS, governança de parceiros e co-marketing).`;
+      const prompt = `Olá Gemini! Pesquise os nomes reais e cargos atuais no LinkedIn das lideranças de Parcerias, Growth/Fidelização, Receita e Talent Acquisition da **${job.empresa}** para a vaga **${job.vaga}**.`;
 
       copyToClipboard(
         prompt,
-        `Prompt de pesquisa de decisores da ${job.empresa} copiado! Cole no chat do Gemini.`
+        `Prompt de pesquisa de decisores da ${job.empresa} copiado!`
       );
     }
 
@@ -3904,7 +3993,6 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
             linkedinUrl,
             notas,
           };
-          showToast(`Contato "${nome}" atualizado!`);
         }
         editingContactId = null;
       } else {
@@ -3917,23 +4005,13 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
           linkedinUrl,
           notas,
         });
-        showToast(`Contato "${nome}" mapeado em ${job.empresa}!`);
       }
 
       saveJobs();
       render();
       renderNetworkingPanel();
       updateDrawerContactBadge();
-    }
-
-    function startEditStakeholder(contactId) {
-      editingContactId = contactId;
-      renderNetworkingPanel();
-    }
-
-    function cancelEditStakeholder() {
-      editingContactId = null;
-      renderNetworkingPanel();
+      showToast(`Contato "${nome}" salvo!`);
     }
 
     function quickUpdateStakeholderStage(contactId, newStage) {
@@ -3948,20 +4026,16 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
       saveJobs();
       render();
       renderNetworkingPanel();
-      showToast(`${job.contatos[cIdx].nome}: estágio atualizado para "${newStage}"`);
     }
 
     function removeStakeholder(contactId) {
       const job = jobs.find((j) => j.id === activeDrawerJobId);
       if (!job || !job.contatos) return;
       job.contatos = job.contatos.filter((c) => c.id !== contactId);
-      if (editingContactId === contactId) editingContactId = null;
-
       saveJobs();
       render();
       renderNetworkingPanel();
       updateDrawerContactBadge();
-      showToast('Contato removido do Mini-CRM.');
     }
 
     // =========================================================================
@@ -4077,9 +4151,7 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
         closeJobDrawer();
       }
       render();
-      showToast(
-        `🧠 Aprendizado registrado para ${jobs[idx].empresa}! Disponível na aba Retroalimentação do Radar.`
-      );
+      showToast(`🧠 Aprendizado registrado para ${jobs[idx].empresa}!`);
     }
 
     function confirmPermanentDeleteJob(jobId) {
@@ -4088,7 +4160,7 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
 
       openConfirmModal(
         'Excluir permanentemente',
-        `Deseja apagar "${job.vaga}" (${job.empresa}) sem registrar aprendizado no histórico? (Dica: se quiser que o Gemini aprenda com essa vaga, use a etapa "Descartada / Declinada".)`,
+        `Deseja apagar "${job.vaga}" (${job.empresa})?`,
         () => {
           jobs = jobs.filter((j) => j.id !== jobId);
           saveJobs();
@@ -4119,13 +4191,10 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
         'Link',
         'Modelo',
         'Contratação',
-        'Aderência (%)',
+        'Aderência Geral (%)',
+        'Match Gupy (%)',
         'Próximo Passo',
         'Observações',
-        'Contatos Mapeados (Mini-CRM)',
-        'Origem Descarte',
-        'Categorias Descarte',
-        'Motivação Descarte',
       ];
 
       const escapeCSV = (val) => {
@@ -4133,19 +4202,8 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
         return `"${str.replace(/"/g, '""')}"`;
       };
 
-      const rows = jobs.map((j) => {
-        const contactsSummary = (j.contatos || [])
-          .map((c) => `${c.nome} [${c.papel} - ${c.estagio}]`)
-          .join(' | ');
-        const d = j.descarte || {};
-        const origemText =
-          d.origem === 'company'
-            ? 'Empresa declinou'
-            : d.origem === 'candidate'
-            ? 'Candidato declinou'
-            : '';
-
-        return [
+      const rows = jobs.map((j) =>
+        [
           j.empresa,
           j.vaga,
           j.status,
@@ -4155,31 +4213,28 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
           j.modelo,
           j.contratacao,
           j.aderencia,
+          calculateGupyScore(j).total,
           j.proximoPasso,
           j.observacoes,
-          contactsSummary,
-          origemText,
-          (d.categorias || []).join('; '),
-          d.motivacao || '',
         ]
           .map(escapeCSV)
-          .join(',');
-      });
+          .join(',')
+      );
 
       const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
       triggerDownload(
         csvContent,
-        `crm_vagas_networking_matheus_${getTodayISO()}.csv`,
+        `crm_vagas_matheus_${getTodayISO()}.csv`,
         'text/csv;charset=utf-8;'
       );
-      showToast('Planilha CSV completa exportada!');
+      showToast('Planilha CSV exportada!');
     }
 
     function exportJSON() {
       const jsonContent = JSON.stringify(jobs, null, 2);
       triggerDownload(
         jsonContent,
-        `crm_vagas_networking_matheus_${getTodayISO()}.json`,
+        `crm_vagas_matheus_${getTodayISO()}.json`,
         'application/json'
       );
       showToast('Backup JSON exportado!');
@@ -4219,9 +4274,9 @@ Para cada nome encontrado, me traga o cargo exato, o contexto recente da área n
           jobs = sanitized;
           saveJobs();
           render();
-          showToast(`${sanitized.length} oportunidade(s) importada(s) com sucesso!`);
+          showToast(`${sanitized.length} oportunidade(s) importada(s)!`);
         } catch (_) {
-          showToast('Erro ao ler arquivo JSON. Verifique a estrutura.', 'error');
+          showToast('Erro ao ler arquivo JSON.', 'error');
         } finally {
           event.target.value = '';
         }
