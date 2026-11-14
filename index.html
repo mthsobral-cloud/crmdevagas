@@ -456,7 +456,7 @@
         <div class="flex items-center gap-2 flex-wrap">
           <div class="relative flex-1 sm:w-56">
             <i data-lucide="search" class="w-3.5 h-3.5 stroke-[1.75] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input id="global-search" type="text" oninput="renderAll()" placeholder="Filtrar empresa, cargo..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-terracotta-600 focus:bg-white" />
+            <input id="global-search" name="careeros-job-filter-search" type="search" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other" oninput="sanitizeSearchAndRender(this)" placeholder="Filtrar empresa, cargo..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-terracotta-600 focus:bg-white" />
           </div>
           <select id="model-filter" onchange="renderAll()" class="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none">
             <option value="all">Todos Modelos</option>
@@ -1004,8 +1004,8 @@
         <div class="flex items-center gap-2.5">
           <i data-lucide="cloud" class="w-4 h-4 stroke-[1.75] text-terracotta-600"></i>
           <div>
-            <h2 class="text-sm font-bold text-slate-900">Sincronização Gratuita em Nuvem (GitHub Gist)</h2>
-            <p class="text-[11px] text-slate-500">Sincronize seu CRM entre computador e celular.</p>
+            <h2 class="text-sm font-bold text-slate-900">Sincronização Automática em Nuvem (GitHub Gist)</h2>
+            <p class="text-[11px] text-slate-500">Sincronize seu CRM entre navegadores, computador e celular.</p>
           </div>
         </div>
         <button onclick="closeGistModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer">
@@ -1015,21 +1015,21 @@
 
       <div class="p-5 space-y-4 text-xs">
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-600 space-y-1">
-          <p class="font-semibold text-slate-800">Como configurar em 30 segundos:</p>
-          <p>1. Acesse <strong>github.com/settings/tokens</strong> e gere um <em>Personal Access Token (classic)</em> marcando apenas a permissão <strong>gist</strong>.</p>
-          <p>2. Cole o token abaixo e clique em <strong>Enviar para Nuvem (Push)</strong>.</p>
-          <p>3. No celular, cole o mesmo Token e o <strong>Gist ID</strong> gerado, e clique em <strong>Baixar da Nuvem (Pull)</strong>.</p>
+          <p class="font-semibold text-slate-800">Como manter dois navegadores 100% iguais:</p>
+          <p>1. Gere um token em <strong>github.com/settings/tokens</strong> marcando apenas a permissão <strong>gist</strong>.</p>
+          <p>2. Cole o Token abaixo e clique em <strong>Enviar (Push)</strong> para gerar o seu <strong>Gist ID</strong>.</p>
+          <p>3. No outro navegador ou celular, cole o <strong>mesmo Token e o mesmo Gist ID</strong> e clique em <strong>Baixar (Pull)</strong>. Depois disso, qualquer mudança sincroniza sozinha!</p>
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 mb-1">GitHub Personal Access Token (escopo: gist)</label>
-          <input id="gist-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-terracotta-600" />
+          <input id="gist-token" name="careeros-gist-secret-key" type="text" autocomplete="off" data-lpignore="true" data-1p-ignore="true" style="-webkit-text-security: disc;" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-terracotta-600" />
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">Gist ID (deixe vazio na primeira vez para criar automaticamente)</label>
+          <label class="block font-semibold text-slate-700 mb-1">Gist ID (use o mesmo ID em todos os navegadores)</label>
           <div class="flex gap-2">
-            <input id="gist-id" type="text" placeholder="Ex: a1b2c3d4e5f6g7h8i9j0..." class="flex-1 px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-terracotta-600" />
+            <input id="gist-id" name="careeros-gist-id-key" type="text" autocomplete="off" placeholder="Ex: a1b2c3d4e5f6g7h8i9j0..." class="flex-1 px-3 py-2 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-terracotta-600" />
             <button type="button" onclick="copyTextToClipboard(document.getElementById('gist-id').value, 'Gist ID copiado!')" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium cursor-pointer">
               Copiar ID
             </button>
@@ -1045,11 +1045,11 @@
             Salvar Credenciais
           </button>
           <div class="flex items-center gap-2">
-            <button type="button" onclick="pullFromGist()" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 cursor-pointer">
+            <button type="button" onclick="pullFromGist(false)" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 cursor-pointer">
               <i data-lucide="arrow-down-to-line" class="w-3.5 h-3.5 stroke-[1.75]"></i>
               <span>Baixar (Pull)</span>
             </button>
-            <button type="button" onclick="pushToGist()" class="px-3.5 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold flex items-center gap-1.5 cursor-pointer">
+            <button type="button" onclick="pushToGist(false)" class="px-3.5 py-2 rounded-xl bg-terracotta-600 hover:bg-terracotta-700 text-white font-semibold flex items-center gap-1.5 cursor-pointer">
               <i data-lucide="arrow-up-from-line" class="w-3.5 h-3.5 stroke-[1.75]"></i>
               <span>Enviar (Push)</span>
             </button>
@@ -1351,11 +1351,9 @@
       return null;
     }
 
-    // Não chuta mais "4.0" para empresas desconhecidas! Retorna null se não verificada.
     function resolveGlassdoorRating(company, explicitRating) {
       const parsed = parseFloat(explicitRating);
       const known = lookupKnownGlassdoorEntry(company);
-      // Corrige automaticamente o valor antigo (4.1) que estava salvo para Atlas Governance
       if (known && normalizeText(company).includes("atlas") && parsed === 4.1) {
         return known.rating;
       }
@@ -1511,6 +1509,7 @@
 
     let currentEditingJobId = null;
     let draggedJobId = null;
+    let autoCloudSyncTimer = null;
 
     function createDefaultPersonas() {
       return [
@@ -1827,7 +1826,6 @@
       const modelPolicy = evaluateWorkModelPolicy(job);
       const glassdoorPolicy = evaluateGlassdoorPolicy(job.company, job.glassdoor, job.glassdoorUrl);
 
-      // Fit Geral pondera: Sinergia Técnica (70%) + Modelo de Trabalho + Reputação Glassdoor + Indicação
       let fitScore = Math.round(semanticRatio * 70 + modelPolicy.fitLocBonus + glassdoorPolicy.fitBonus + (hasReferral ? 6 : 2));
       fitScore = Math.max(35, Math.min(98, fitScore));
 
@@ -2112,117 +2110,55 @@ ${CANDIDATE_PROFILE.linkedin}`;
     }
 
     function generatePersonaScripts(job, persona) {
-      const company = job.company;
-      const title = job.title;
-
-      const scripts = {
+      const c = job.company, t = job.title;
+      const map = {
         "Hiring Manager": {
-          invite: `Olá! Vi a vaga de ${title} na ${company} e me identifiquei bastante. Atuo como Especialista em Parcerias na Pluga (SaaS B2B), liderando governança de 94 parceiros, co-marketing (120+ ações/ano) e métricas de LTV/churn. Gostaria de conectar.`,
-          followup: `Olá! Tudo bem? Acabei de me candidatar para ${title} na ${company}. Hoje lidero a frente de Parcerias Estratégicas da Pluga (SaaS B2B, +500% na base ativa e cases como ContaAzul com +40% LTV e -7% churn) e anteriormente geri 25+ grandes contas na Cactus (~R$ 3M em pipeline). Fico à disposição caso faça sentido trocarmos uma breve ideia sobre os desafios do time!`
+          invite: `Olá! Vi a vaga de ${t} na ${c} e me identifiquei bastante. Atuo como Especialista em Parcerias na Pluga (SaaS B2B), liderando governança de 94 parceiros, co-marketing (120+ ações/ano) e métricas de LTV/churn. Gostaria de conectar.`,
+          followup: `Olá! Tudo bem? Acabei de me candidatar para ${t} na ${c}. Hoje lidero Parcerias Estratégicas na Pluga (+500% na base ativa e case ContaAzul com +40% LTV e -7% churn) e geri 25+ grandes contas na Cactus (~R$ 3M em pipeline). Fico à disposição para trocarmos uma ideia!`
         },
         "Liderança de Negócios": {
-          invite: `Olá! Acompanho o trabalho da ${company}. Sou Especialista em Parcerias & Canais B2B SaaS (Pluga, ex-Cactus) com foco em governança de ecossistema, co-marketing e geração de receita rastreável. Gostaria de conectar por aqui.`,
-          followup: `Olá! Como vai? Tenho acompanhado a ${company} e apliquei para a vaga de ${title}. Minha atuação une construção de canais B2B do zero, governança em Tiers e sincronia com Comercial/Produto para converter parcerias em LTV e retenção. Será um prazer conectar!`
+          invite: `Olá! Acompanho o trabalho da ${c}. Sou Especialista em Parcerias & Canais B2B SaaS (Pluga, ex-Cactus) com foco em governança de ecossistema, co-marketing e receita rastreável. Gostaria de conectar.`,
+          followup: `Olá! Tenho acompanhado a ${c} e apliquei para ${t}. Minha atuação une construção de canais B2B do zero, governança em Tiers e sincronia com Comercial/Produto para converter parcerias em LTV e retenção.`
         },
         "Par do Time": {
-          invite: `Oi! Tudo bem? Vi a oportunidade de ${title} na ${company} e gostaria de conectar. Trabalho com Parcerias Estratégicas e Growth B2B SaaS na Pluga e adoro trocar experiências com profissionais da área.`,
-          followup: `Oi! Tudo certo? Apliquei para a vaga de ${title} na ${company}. Como atuamos na mesma frente de ecossistema B2B e crescimento, adoraria ouvir sua perspectiva sobre a dinâmica e os projetos do time por aí!`
+          invite: `Oi! Vi a oportunidade de ${t} na ${c} e gostaria de conectar. Trabalho com Parcerias Estratégicas e Growth B2B SaaS na Pluga e adoro trocar experiências na área.`,
+          followup: `Oi! Apliquei para ${t} na ${c}. Como atuamos na mesma frente de ecossistema B2B e growth, adoraria ouvir sua perspectiva sobre os projetos do time!`
         },
         "Tech / Business Recruiter": {
-          invite: `Olá! Tudo bem? Acabei de me inscrever na vaga de ${title} na ${company}. Tenho 8+ anos de experiência em Parcerias B2B SaaS, Canais, Fidelização e Growth (Pluga, Cactus e AU). Gostaria de conectar.`,
-          followup: `Olá! Tudo bem? Me candidatei para ${title} na ${company} e gostaria de me apresentar brevemente: atuo há 8+ anos estruturando canais de parcerias B2B SaaS, governança de ecossistema e programas de retenção/LTV (atualmente como Especialista em Parcerias na Pluga). Fico totalmente à disposição para o processo seletivo!`
+          invite: `Olá! Acabei de me inscrever na vaga de ${t} na ${c}. Tenho 8+ anos em Parcerias B2B SaaS, Canais, Fidelização e Growth (Pluga, Cactus e AU). Gostaria de conectar.`,
+          followup: `Olá! Me candidatei para ${t} na ${c}: atuo há 8+ anos estruturando canais de parcerias B2B SaaS, governança e retenção/LTV (atualmente Especialista em Parcerias na Pluga). Fico à disposição!`
         }
       };
-
-      return scripts[persona.roleType] || scripts["Hiring Manager"];
+      return map[persona.roleType] || map["Hiring Manager"];
     }
 
     function buildSmartCompanyLinks(company, suggestedTitle) {
       const norm = normalizeText(company).trim();
       const slug = COMPANY_LINKEDIN_SLUGS[norm];
-      const firstRoleKeyword = suggestedTitle.split(" OR ")[0];
-      const linkedinPeopleUrl = slug
-        ? `https://www.linkedin.com/company/${slug}/people/?keywords=${encodeURIComponent(firstRoleKeyword)}`
-        : `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company + " " + firstRoleKeyword)}`;
-      const googleXrayUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:linkedin.com/in/ "${company}" (${suggestedTitle})`)}`;
-      return { linkedinPeopleUrl, googleXrayUrl };
-    }
-
-    function convertLegacyV2Job(oldJob, idx) {
-      const personas = createDefaultPersonas();
-      if (Array.isArray(oldJob.contatos) && oldJob.contatos.length > 0) {
-        oldJob.contatos.slice(0, 4).forEach((c, i) => {
-          if (personas[i]) {
-            personas[i].contactName = c.nome || "";
-            personas[i].profileUrl = c.linkedinUrl || "";
-            personas[i].notes = c.notas || "";
-            if (c.estagio === "Indicação / Call Feita") personas[i].status = "Indicação confirmada";
-            else if (c.estagio === "Em Conversa") personas[i].status = "Em conversa";
-            else if (c.estagio === "Mensagem Enviada") personas[i].status = "Conectado / Mensagem enviada";
-            else if (c.estagio === "Convite Enviado") personas[i].status = "Convite enviado";
-          }
-        });
-      }
-
+      const kw = suggestedTitle.split(" OR ")[0];
       return {
-        id: oldJob.id || `job-mig-${idx}`,
-        company: oldJob.empresa || oldJob.company || "Empresa",
-        title: oldJob.vaga || oldJob.title || "Vaga",
-        platform: oldJob.plataforma || oldJob.platform || "Gupy",
-        model: oldJob.modelo || oldJob.model || "Remoto",
-        location: oldJob.localidadePublicacao || oldJob.location || `${oldJob.modelo || "Remoto"} • ${oldJob.contratacao || "CLT"}`,
-        glassdoor: resolveGlassdoorRating(oldJob.empresa || oldJob.company, oldJob.glassdoor),
-        publishedAt: oldJob.dataPublicacao || oldJob.publishedAt || "10/11/2026",
-        verifiedAt: oldJob.ultimaVerificacao || oldJob.verifiedAt || "13/11/2026 17:55",
-        stage: oldJob.status || oldJob.stage || "Mapeada",
-        url: oldJob.link || oldJob.url || "",
-        discardReason: (oldJob.descarte && oldJob.descarte.motivacao) || oldJob.proximoPasso || oldJob.discardReason || "",
-        updatedAt: oldJob.updatedAt || new Date().toISOString(),
-        notes: oldJob.observacoes || oldJob.notes || "",
-        description: oldJob.descricaoVaga || oldJob.description || oldJob.observacoes || "",
-        personas: Array.isArray(oldJob.personas) ? oldJob.personas : personas
+        linkedinPeopleUrl: slug
+          ? `https://www.linkedin.com/company/${slug}/people/?keywords=${encodeURIComponent(kw)}`
+          : `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company + " " + kw)}`,
+        googleXrayUrl: `https://www.google.com/search?q=${encodeURIComponent(`site:linkedin.com/in/ "${company}" (${suggestedTitle})`)}`
       };
     }
 
     function loadState() {
       try {
-        const savedMaster = localStorage.getItem(STORAGE_KEY);
-        if (savedMaster) {
-          const parsed = JSON.parse(savedMaster);
-          if (parsed && Array.isArray(parsed.jobs) && parsed.jobs.length > 0) {
-            appState = {
-              engine: parsed.engine || "fit",
-              educationStatus: parsed.educationStatus || "Cursando",
-              gupyFormatMode: parsed.gupyFormatMode || "bullets",
-              dismissedRadarIds: Array.isArray(parsed.dismissedRadarIds) ? parsed.dismissedRadarIds : [],
-              radarFeedbackLog: Array.isArray(parsed.radarFeedbackLog) ? parsed.radarFeedbackLog : [],
-              jobs: parsed.jobs
-            };
-          }
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (saved && Array.isArray(saved.jobs) && saved.jobs.length > 0) {
+          appState = {
+            engine: saved.engine || "fit",
+            educationStatus: saved.educationStatus || "Cursando",
+            gupyFormatMode: saved.gupyFormatMode || "bullets",
+            dismissedRadarIds: Array.isArray(saved.dismissedRadarIds) ? saved.dismissedRadarIds : [],
+            radarFeedbackLog: Array.isArray(saved.radarFeedbackLog) ? saved.radarFeedbackLog : [],
+            jobs: saved.jobs
+          };
         }
 
-        const existingKeys = new Set(
-          appState.jobs.map(j => `${normalizeText(j.company)}|${normalizeText(j.title)}`)
-        );
-
-        LEGACY_STORAGE_KEYS.forEach(legacyKey => {
-          const legacyRaw = localStorage.getItem(legacyKey);
-          if (!legacyRaw) return;
-          try {
-            const legacyParsed = JSON.parse(legacyRaw);
-            const arr = Array.isArray(legacyParsed) ? legacyParsed : (legacyParsed && Array.isArray(legacyParsed.jobs) ? legacyParsed.jobs : []);
-            arr.forEach((item, idx) => {
-              const converted = convertLegacyV2Job(item, idx);
-              const sig = `${normalizeText(converted.company)}|${normalizeText(converted.title)}`;
-              if (!existingKeys.has(sig)) {
-                existingKeys.add(sig);
-                appState.jobs.push(converted);
-              }
-            });
-          } catch (_) {}
-        });
-
-        // Garante as 8 vagas calibradas de Matheus e sincroniza notas reais auditadas do Glassdoor
+        const existingKeys = new Set(appState.jobs.map(j => `${normalizeText(j.company)}|${normalizeText(j.title)}`));
         getSeedJobs().forEach(seed => {
           const sig = `${normalizeText(seed.company)}|${normalizeText(seed.title)}`;
           if (!existingKeys.has(sig)) {
@@ -2231,7 +2167,6 @@ ${CANDIDATE_PROFILE.linkedin}`;
           }
         });
 
-        // Sincroniza notas e URLs verificadas do Glassdoor nas vagas já salvas no navegador (ex: Atlas 2.8★)
         appState.jobs.forEach(job => {
           const known = lookupKnownGlassdoorEntry(job.company);
           if (known) {
@@ -2239,25 +2174,36 @@ ${CANDIDATE_PROFILE.linkedin}`;
             if (normalizeText(job.company).includes("atlas") && (job.glassdoor === 4.1 || !job.glassdoor)) {
               job.glassdoor = 2.8;
               job.glassdoorUrl = known.url;
-            } else if (job.glassdoor === undefined || job.glassdoor === null) {
+            } else if (job.glassdoor == null) {
               job.glassdoor = known.rating;
             }
           }
         });
-
-        saveState();
-      } catch (e) {
+        saveState(true);
+      } catch (_) {
         appState.jobs = getSeedJobs();
       }
       updateGistIndicator();
     }
 
-    function saveState() {
+    function saveState(skipCloudAutoPush = false) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        if (!skipCloudAutoPush) {
+          scheduleAutoPushToGist();
+        }
       } catch (e) {
         showToast("Erro ao salvar no navegador.", "error");
       }
+    }
+
+    function scheduleAutoPushToGist() {
+      const cfg = getGistConfig();
+      if (!cfg || !cfg.token || !cfg.gistId) return;
+      if (autoCloudSyncTimer) clearTimeout(autoCloudSyncTimer);
+      autoCloudSyncTimer = setTimeout(() => {
+        pushToGist(true);
+      }, 1200);
     }
 
     function resetToCuratedSeeds() {
@@ -2275,11 +2221,15 @@ ${CANDIDATE_PROFILE.linkedin}`;
       }
     }
 
-    function updateGistIndicator() {
+    function updateGistIndicator(status = "idle") {
       const cfg = getGistConfig();
       const dot = document.getElementById("gist-sync-dot");
       if (!dot) return;
-      if (cfg.token && cfg.gistId) {
+      if (status === "syncing") {
+        dot.className = "w-2 h-2 rounded-full bg-[#FF6B00] animate-ping";
+      } else if (status === "error") {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+      } else if (cfg.token && cfg.gistId) {
         dot.className = "w-2 h-2 rounded-full bg-olive-600";
       } else if (cfg.token) {
         dot.className = "w-2 h-2 rounded-full bg-terracotta-600";
@@ -2312,15 +2262,20 @@ ${CANDIDATE_PROFILE.linkedin}`;
       showToast("Credenciais do GitHub Gist salvas localmente.");
     }
 
-    async function pushToGist() {
-      const token = document.getElementById("gist-token").value.trim();
-      let gistId = document.getElementById("gist-id").value.trim();
+    async function pushToGist(silent = false) {
+      const cfg = getGistConfig();
+      const tokenInput = document.getElementById("gist-token");
+      const idInput = document.getElementById("gist-id");
+      const token = (tokenInput && tokenInput.value.trim()) || cfg.token || "";
+      let gistId = (idInput && idInput.value.trim()) || cfg.gistId || "";
+
       if (!token) {
-        showToast("Informe seu GitHub Personal Access Token (escopo gist).", "error");
+        if (!silent) showToast("Informe seu GitHub Personal Access Token (escopo gist).", "error");
         return;
       }
       try {
-        showToast("Enviando dados para o GitHub Gist...");
+        updateGistIndicator("syncing");
+        if (!silent) showToast("Enviando dados para o GitHub Gist...");
         const payload = {
           description: "CareerOS Backup - Matheus Sobral CRM & ATS",
           public: false,
@@ -2344,26 +2299,33 @@ ${CANDIDATE_PROFILE.linkedin}`;
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         gistId = data.id;
-        document.getElementById("gist-id").value = gistId;
+        if (idInput) idInput.value = gistId;
         const nowStr = new Date().toLocaleString("pt-BR");
         localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify({ token, gistId, lastSync: nowStr }));
-        document.getElementById("gist-last-sync").textContent = `Última sincronização: ${nowStr} (Push concluído)`;
-        updateGistIndicator();
-        showToast("Sincronizado com sucesso na nuvem.");
+        const syncEl = document.getElementById("gist-last-sync");
+        if (syncEl) syncEl.textContent = `Última sincronização: ${nowStr} (Auto-Push ativo)`;
+        updateGistIndicator("idle");
+        if (!silent) showToast("Sincronizado com sucesso na nuvem.");
       } catch (err) {
-        showToast("Falha ao enviar para o Gist. Verifique o Token e o Gist ID.", "error");
+        updateGistIndicator("error");
+        if (!silent) showToast("Falha ao enviar para o Gist. Verifique o Token e o Gist ID.", "error");
       }
     }
 
-    async function pullFromGist() {
-      const token = document.getElementById("gist-token").value.trim();
-      const gistId = document.getElementById("gist-id").value.trim();
+    async function pullFromGist(silent = false) {
+      const cfg = getGistConfig();
+      const tokenInput = document.getElementById("gist-token");
+      const idInput = document.getElementById("gist-id");
+      const token = (tokenInput && tokenInput.value.trim()) || cfg.token || "";
+      const gistId = (idInput && idInput.value.trim()) || cfg.gistId || "";
+
       if (!token || !gistId) {
-        showToast("Informe o Token e o Gist ID para baixar da nuvem.", "error");
+        if (!silent) showToast("Informe o Token e o Gist ID para baixar da nuvem.", "error");
         return;
       }
       try {
-        showToast("Baixando dados do GitHub Gist...");
+        updateGistIndicator("syncing");
+        if (!silent) showToast("Baixando dados do GitHub Gist...");
         const response = await fetch(`https://api.github.com/gists/${gistId}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -2381,15 +2343,17 @@ ${CANDIDATE_PROFILE.linkedin}`;
         } else if (Array.isArray(remoteData)) {
           appState.jobs = remoteData.map((item, idx) => convertLegacyV2Job(item, idx));
         }
-        saveState();
+        saveState(true);
         renderAll();
         const nowStr = new Date().toLocaleString("pt-BR");
         localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify({ token, gistId, lastSync: nowStr }));
-        document.getElementById("gist-last-sync").textContent = `Última sincronização: ${nowStr} (Pull concluído)`;
-        updateGistIndicator();
-        showToast("Dados restaurados da nuvem com sucesso.");
+        const syncEl = document.getElementById("gist-last-sync");
+        if (syncEl) syncEl.textContent = `Última sincronização: ${nowStr} (Pull concluído)`;
+        updateGistIndicator("idle");
+        if (!silent) showToast("Dados restaurados da nuvem com sucesso.");
       } catch (err) {
-        showToast("Erro ao baixar do GitHub Gist. Verifique as credenciais.", "error");
+        updateGistIndicator("error");
+        if (!silent) showToast("Erro ao baixar do GitHub Gist. Verifique as credenciais.", "error");
       }
     }
 
@@ -2435,7 +2399,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
     }
 
     function exportCSV() {
-      const headers = ["Empresa", "Cargo", "Etapa", "Plataforma", "Modelo", "Publicada Em", "Verificada Em", "Fit Geral (%)", "Match Gupy (pts)", "Contatos Ativos", "Link", "Próximo Passo / Motivo Descarte"];
+      const headers = ["Empresa", "Cargo", "Etapa", "Plataforma", "Modelo", "Glassdoor", "Publicada Em", "Verificada Em", "Fit Geral (%)", "Match Gupy (pts)", "Contatos Ativos", "Link", "Próximo Passo / Motivo Descarte"];
       const rows = appState.jobs.map(job => {
         const evalData = evaluateJobScores(job);
         const activeContacts = (job.personas || []).filter(p => p.status !== "Não contatado").length;
@@ -2445,6 +2409,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
           job.stage,
           job.platform,
           job.model,
+          evalData.glassdoorPolicy.rating !== null ? evalData.glassdoorPolicy.rating : "",
           job.publishedAt || "",
           job.verifiedAt || "",
           evalData.fitScore,
@@ -2503,7 +2468,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         platform: "Gupy",
         model: "Remoto",
         location: "Aberta até 05/12/2026 • CLT",
-        glassdoor: 4.0,
+        glassdoor: 3.9,
         publishedAt: "04/11/2026",
         url: "https://valid.gupy.io/job/eyJqb2JJZCI6MTI2ODgyNjQsInNvdXJjZSI6ImluZGVlZCJ9?jobBoardSource=indeed",
         description: "Vaga EFETIVA verificada aberta na Gupy (inscrições até 05/12/2026). Estruturação e execução de estratégias de Account-Based Marketing (ABM) B2B, geração de demanda em grandes contas, ações conjuntas com Comercial, co-marketing, CRM e análise de KPIs de pipeline e conversão."
@@ -2515,7 +2480,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         platform: "Gupy",
         model: "Remoto",
         location: "Remoto (Brasil) • Aberta até 10/01/2027",
-        glassdoor: 4.4,
+        glassdoor: 4.3,
         publishedAt: "11/11/2026",
         url: "https://gringoezapay.gupy.io/job/eyJqb2JJZCI6MTI4NzIzNjYsInNvdXJjZSI6Imd1cHlfcG9ydGFsIn0=?jobBoardSource=gupy_portal",
         description: "Vaga EFETIVA 100% Remota publicada em 11/11/2026 (inscrições abertas até 10/01/2027). Atuação sênior em Growth, alavancas de aquisição, retenção, parcerias estratégicas no ecossistema automotivo/fintech, análise de dados de funil, LTV, churn e experimentação."
@@ -2527,7 +2492,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         platform: "Gupy",
         model: "Híbrido RJ",
         location: "Rio de Janeiro, RJ • Aberta até 16/11/2026",
-        glassdoor: 4.1,
+        glassdoor: 4.0,
         publishedAt: "06/11/2026",
         url: "https://amchamcarreiras.gupy.io/jobs/12519872?jobBoardSource=gupy_public_page",
         description: "Vaga EFETIVA no Rio de Janeiro (inscrições abertas até 16/11/2026). Forte sinergia com Associação Cactus e Academia do Universitário: venda consultiva de patrocínios, parcerias estratégicas e eventos corporativos, relacionamento com C-Level e grandes empresas associadas."
@@ -2537,16 +2502,73 @@ ${CANDIDATE_PROFILE.linkedin}`;
     let discoveredSuggestions = [];
     let lastScanStatusMessage = "";
 
+    // Busca ao vivo na API Pública da Gupy via Proxy CORS (com fallback automático)
+    async function fetchLiveGupyOpportunities() {
+      const queries = ["Especialista Parcerias", "Account Based Marketing", "Growth B2B"];
+      const collected = [];
+
+      const fetchViaCorsProxy = async (targetUrl) => {
+        const proxies = [
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+          `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        ];
+        for (const pUrl of proxies) {
+          try {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 3200);
+            const res = await fetch(pUrl, { signal: ctrl.signal });
+            clearTimeout(timer);
+            if (res.ok) return await res.json();
+          } catch (_) {}
+        }
+        return null;
+      };
+
+      await Promise.all(queries.map(async (q) => {
+        const apiUrl = `https://portal.api.gupy.io/api/v1/jobs?jobName=${encodeURIComponent(q)}&limit=8&offset=0`;
+        const payload = await fetchViaCorsProxy(apiUrl);
+        const list = (payload && (payload.data || payload.results || payload.jobs)) || [];
+        list.forEach(item => {
+          const title = item.name || item.title || "";
+          const company = item.careerPageName || item.companyName || "Empresa Gupy";
+          const desc = String(item.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+          const workplace = item.workplaceType || (item.isRemoteWork ? "remote" : "");
+          const city = item.city || "";
+          const state = item.state || "";
+
+          if (!title || isTalentPoolJob(title, desc)) return;
+
+          const isRemote = workplace === "remote" || item.isRemoteWork === true || /remoto/i.test(title + " " + city);
+          const isRJ = /rio de janeiro|\brj\b/i.test(`${city} ${state}`);
+          if (!isRemote && !isRJ) return;
+
+          collected.push({
+            id: `gupy-live-${item.id || Math.random().toString(36).slice(2, 8)}`,
+            company,
+            title,
+            platform: "Gupy",
+            model: isRemote ? "Remoto" : "Híbrido RJ",
+            location: isRemote ? "Remoto (Brasil) • Gupy Live" : `${city || "RJ"} • Gupy Live`,
+            publishedAt: (item.publishedDate || "").slice(0, 10).split("-").reverse().join("/") || "Recente",
+            url: item.jobUrl || `https://portal.gupy.io/job-search/term=${encodeURIComponent(title)}`,
+            description: desc.slice(0, 420) || `${title} na ${company} (${q}).`
+          });
+        });
+      }));
+
+      return collected;
+    }
+
     async function runStartupJobDiscovery(manualTrigger = false) {
       const pillText = document.getElementById("discovery-pill-text");
       const dot = document.getElementById("discovery-dot");
       const rescanBtn = document.getElementById("btn-rescan-radar");
 
-      if (pillText) pillText.textContent = "Buscando novas vagas...";
+      if (pillText) pillText.textContent = "Varrendo Gupy & Radar...";
       if (dot) dot.classList.add("animate-ping");
       if (rescanBtn && manualTrigger) {
         rescanBtn.disabled = true;
-        rescanBtn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> <span>Buscando...</span>`;
+        rescanBtn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> <span>Varrendo Gupy...</span>`;
         refreshIcons();
       }
 
@@ -2558,22 +2580,25 @@ ${CANDIDATE_PROFILE.linkedin}`;
       const pool = [...CURATED_RADAR_WATCHLIST];
 
       try {
+        const liveGupyJobs = await fetchLiveGupyOpportunities();
+        liveGupyJobs.slice(0, 6).forEach(jb => pool.unshift(jb));
+      } catch (_) {}
+
+      try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 3200);
-        const resp = await fetch("https://remotive.com/api/remote-jobs?category=marketing&limit=25", {
+        const timer = setTimeout(() => controller.abort(), 2800);
+        const resp = await fetch("https://remotive.com/api/remote-jobs?category=marketing&limit=20", {
           signal: controller.signal
         });
         clearTimeout(timer);
         if (resp.ok) {
           const data = await resp.json();
-          const liveJobs = (data.jobs || []).filter(item => {
+          (data.jobs || []).filter(item => {
             const text = normalizeText(`${item.title} ${item.candidate_required_location || ""}`);
-            const roleMatch = /partner|partnership|alliance|growth|abm|channel|b2b|community|product marketing/.test(text);
-            const locMatch = /brazil|brasil|latam|latin america|worldwide|anywhere/.test(text);
-            return roleMatch && locMatch && !isTalentPoolJob(item.title, item.description || "");
-          });
-
-          liveJobs.slice(0, 3).forEach(item => {
+            return /partner|partnership|alliance|growth|abm|channel|b2b/.test(text) &&
+                   /brazil|brasil|latam|worldwide|anywhere/.test(text) &&
+                   !isTalentPoolJob(item.title, item.description || "");
+          }).slice(0, 2).forEach(item => {
             pool.push({
               id: `live-rem-${item.id}`,
               company: item.company_name || "Empresa Remota",
@@ -2583,29 +2608,28 @@ ${CANDIDATE_PROFILE.linkedin}`;
               location: `Remoto (${item.candidate_required_location || "LATAM"})`,
               publishedAt: (item.publication_date || "").slice(0, 10) || "Nov/2026",
               url: item.url,
-              description: String(item.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 380)
+              description: String(item.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 360)
             });
           });
         }
       } catch (_) {}
 
-      if (manualTrigger) {
-        await new Promise(r => setTimeout(r, 450));
-      }
-
+      const seenSigs = new Set();
       discoveredSuggestions = pool.filter(cand => {
         const sig = `${normalizeText(cand.company)}|${normalizeText(cand.title)}`;
+        if (seenSigs.has(sig)) return false;
+        seenSigs.add(sig);
+
         const gdRating = resolveGlassdoorRating(cand.company, cand.glassdoor);
         cand.glassdoor = gdRating;
         cand.glassdoorUrl = resolveGlassdoorUrl(cand.company, cand.glassdoorUrl);
-        // Desconsidera automaticamente no Radar empresas com Glassdoor verificado abaixo de 3.5 estrelas
         if (gdRating !== null && gdRating < MIN_GLASSDOOR_THRESHOLD) return false;
         return !existingSigs.has(sig) && !dismissedSet.has(cand.id) && !dismissedSet.has(sig);
       });
 
       const nowHour = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
       if (discoveredSuggestions.length === 0) {
-        lastScanStatusMessage = `Busca concluída às ${nowHour}: nenhuma vaga nova encontrada fora do seu Kanban (ou todas as sugestões atuais foram recusadas).`;
+        lastScanStatusMessage = `Varredura Gupy + Radar concluída às ${nowHour}: nenhuma vaga inédita fora do seu Kanban.`;
       } else {
         lastScanStatusMessage = "";
       }
@@ -2628,7 +2652,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
 
       if (manualTrigger) {
         if (discoveredSuggestions.length > 0) {
-          showToast(`Busca concluída: ${discoveredSuggestions.length} vaga(s) disponível(is) no Radar.`);
+          showToast(`Busca Gupy concluída: ${discoveredSuggestions.length} vaga(s) disponível(is) no Radar.`);
         } else {
           showToast("Busca concluída: nenhuma vaga nova encontrada no momento.", "error");
         }
@@ -2882,6 +2906,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         model: sug.model,
         location: sug.location,
         glassdoor: resolveGlassdoorRating(sug.company, sug.glassdoor),
+        glassdoorUrl: resolveGlassdoorUrl(sug.company, sug.glassdoorUrl),
         publishedAt: stamp.split(" às ")[0],
         verifiedAt: stamp,
         stage: "Mapeada",
@@ -3133,6 +3158,13 @@ Regras obrigatórias de filtragem:
       });
     }
 
+    function sanitizeSearchAndRender(inputEl) {
+      if (inputEl && /^(ghp_|github_pat_)/i.test(inputEl.value.trim())) {
+        inputEl.value = "";
+      }
+      renderAll();
+    }
+
     function renderAll() {
       updateEducationButtonUI();
       renderKPIs();
@@ -3250,19 +3282,25 @@ Regras obrigatórias de filtragem:
                       </a>
                     </div>
 
-                    <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                      <span>👥 ${activeContacts}/4 contatos</span>
-                      <div class="flex items-center gap-1.5">
-                        <span>✓ ${escapeHtml((job.verifiedAt || "").split(" ")[0] || "Ativa")}</span>
-                        <button
-                          type="button"
-                          onclick="event.stopPropagation(); openJobDiscardModal('${job.id}')"
-                          title="Declinar vaga ou registrar negativa da empresa"
-                          class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-rose-900/60 text-slate-400 hover:text-rose-200 transition-colors cursor-pointer"
-                        >
-                          ✕ Declinar
-                        </button>
-                      </div>
+                    <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px] text-slate-500 font-mono">
+                      <span class="shrink-0" title="Contatos acionados no Mini-CRM">👥 ${activeContacts}/4</span>
+                      <select
+                        onclick="event.stopPropagation()"
+                        onmousedown="event.stopPropagation()"
+                        onchange="event.stopPropagation(); quickChangeJobStage('${job.id}', this.value)"
+                        title="Mudar etapa e mover para a coluna correspondente"
+                        class="flex-1 min-w-0 max-w-[155px] px-1.5 py-0.5 rounded bg-[#091024] border border-slate-700/80 hover:border-[#FF6B00] text-[10px] font-sans font-semibold text-slate-200 focus:outline-none cursor-pointer truncate"
+                      >
+                        ${KANBAN_STAGES.map(st => `<option value="${st.id}" ${st.id === job.stage ? "selected" : ""}>${escapeHtml(st.label)}</option>`).join("")}
+                      </select>
+                      <button
+                        type="button"
+                        onclick="event.stopPropagation(); openJobDiscardModal('${job.id}')"
+                        title="Declinar vaga ou registrar negativa da empresa"
+                        class="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-rose-900/60 text-slate-400 hover:text-rose-200 transition-colors cursor-pointer shrink-0"
+                      >
+                        ✕ Declinar
+                      </button>
                     </div>
                   </div>
                 `;
@@ -3355,7 +3393,12 @@ Regras obrigatórias de filtragem:
               </div>
             </td>
             <td class="py-3 px-3">
-              <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-800">${escapeHtml(job.stage)}</span>
+              <select
+                onchange="quickChangeJobStage('${job.id}', this.value)"
+                class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-800 border border-slate-700/60 cursor-pointer"
+              >
+                ${KANBAN_STAGES.map(st => `<option value="${st.id}" ${st.id === job.stage ? "selected" : ""}>${escapeHtml(st.label)}</option>`).join("")}
+              </select>
             </td>
             <td class="py-3 px-3">
               <div class="flex flex-col gap-1 items-start">
@@ -3820,6 +3863,38 @@ Regras obrigatórias de filtragem:
         renderJobDetailModal(currentEditingJobId);
       }
     }
+
+    function quickChangeJobStage(jobId, newStage) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      if (newStage === "Descartada / Declinada") {
+        job.stage = "Descartada / Declinada";
+        job.updatedAt = new Date().toISOString();
+        saveState();
+        renderAll();
+        if (currentEditingJobId === job.id) {
+          renderJobDetailModal(job.id);
+        }
+        openJobDiscardModal(job.id);
+        return;
+      }
+
+      job.stage = newStage;
+      job.updatedAt = new Date().toISOString();
+      saveState();
+      renderAll();
+      if (currentEditingJobId === job.id) {
+        renderJobDetailModal(job.id);
+      }
+      showToast(`"${job.company}" movida para: ${newStage}`);
+    }
+
+    function updateCurrentJobStage(newStage) {
+      if (!currentEditingJobId) return;
+      quickChangeJobStage(currentEditingJobId, newStage);
+    }
+
     function openGlassdoorXrayForCurrentJob() {
       const compEl = document.getElementById("ed-company");
       const company = compEl ? compEl.value.trim() : "";
@@ -4062,10 +4137,24 @@ Regras obrigatórias de filtragem:
       }
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
+      const searchEl = document.getElementById("global-search");
+      if (searchEl) {
+        searchEl.value = "";
+        setTimeout(() => {
+          if (/^(ghp_|github_pat_)/i.test(searchEl.value.trim())) {
+            searchEl.value = "";
+            renderAll();
+          }
+        }, 350);
+      }
       loadState();
       setGlobalEngine(appState.engine);
       refreshIcons();
+      const cfg = getGistConfig();
+      if (cfg && cfg.token && cfg.gistId) {
+        await pullFromGist(true);
+      }
       runStartupJobDiscovery(false);
     });
   </script>
