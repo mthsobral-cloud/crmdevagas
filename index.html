@@ -2251,7 +2251,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         personas: Array.isArray(job.personas) && job.personas.length > 0 ? job.personas : createDefaultPersonas(),
         fit_geral: ev.fitScore,
         match_gaia: ev.gupyTotal,
-        updated_at: job.updatedAt || new Date().toISOString()
+        updated_at: job.updatedAt || new Date().toISOString(),
       };
     }
 
