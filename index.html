@@ -2186,8 +2186,116 @@ ${CANDIDATE_PROFILE.linkedin}`;
         googleXrayUrl: `https://www.google.com/search?q=${encodeURIComponent(`site:linkedin.com/in/ "${company}" (${suggestedTitle})`)}`
       };
     }
+// =========================================================================
+    // SUPABASE AUTH + BANCO DE DADOS + REALTIME (SUBSTITUI O GITHUB GIST)
+    // =========================================================================
+    const SUPABASE_URL = "https://pxsaqkuucwfsaoiavdbs.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_xeY8tT91S0K1LGDuxXK7ug_pXYhX7wt";
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function loadState() {
+    let currentUser = null;
+    let realtimeChannel = null;
+    let lastLocalPushAt = 0;
+
+    function updateSyncIndicator(status = "idle") {
+      const dot = document.getElementById("sb-sync-dot");
+      const label = document.getElementById("sb-sync-label");
+      if (!dot) return;
+      if (status === "syncing") {
+        dot.className = "w-2 h-2 rounded-full bg-[#FF6B00] animate-ping";
+        if (label) label.textContent = "Salvando...";
+      } else if (status === "error") {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        if (label) label.textContent = "Erro Sync";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+        if (label) label.textContent = "Supabase Live";
+      }
+    }
+
+    function jobToDbRow(job, userId) {
+      const ev = evaluateJobScores(job);
+      return {
+        id: String(job.id),
+        user_id: userId,
+        empresa: job.company || "",
+        titulo: job.title || "",
+        plataforma: job.platform || "Gupy",
+        modelo: job.model || "Remoto",
+        localidade: job.location || "",
+        glassdoor: job.glassdoor !== null && job.glassdoor !== "" && !isNaN(parseFloat(job.glassdoor)) ? Number(parseFloat(job.glassdoor).toFixed(1)) : null,
+        glassdoor_url: job.glassdoorUrl || "",
+        publicada_em: job.publishedAt || "",
+        verificada_em: job.verifiedAt || "",
+        etapa: job.stage || "Mapeada",
+        url: job.url || "",
+        descricao: job.description || "",
+        notas: job.notes || "",
+        motivo_descarte: job.discardReason || "",
+        origem_descarte: job.discardOrigin || null,
+        hipoteses_descarte: Array.isArray(job.discardHypotheses) ? job.discardHypotheses : [],
+        trilha_manual: job.manualTrack || "",
+        personas: Array.isArray(job.personas) && job.personas.length > 0 ? job.personas : createDefaultPersonas(),
+        fit_geral: ev.fitScore,
+        match_gaia: ev.gupyTotal,
+        updated_at: job.updatedAt || new Date().toISOString()
+      };
+    }
+
+    function dbRowToJob(row) {
+      return {
+        id: row.id,
+        company: row.empresa || "",
+        title: row.titulo || "",
+        platform: row.plataforma || "Gupy",
+        model: row.modelo || "Remoto",
+        location: row.localidade || "",
+        glassdoor: row.glassdoor !== null && row.glassdoor !== undefined ? Number(row.glassdoor) : null,
+        glassdoorUrl: row.glassdoor_url || "",
+        publishedAt: row.publicada_em || "",
+        verifiedAt: row.verificada_em || "",
+        stage: row.etapa || "Mapeada",
+        url: row.url || "",
+        description: row.descricao || "",
+        notes: row.notas || "",
+        discardReason: row.motivo_descarte || "",
+        discardOrigin: row.origem_descarte || undefined,
+        discardHypotheses: Array.isArray(row.hipoteses_descarte) ? row.hipoteses_descarte : [],
+        manualTrack: row.trilha_manual || "",
+        personas: Array.isArray(row.personas) && row.personas.length > 0 ? row.personas : createDefaultPersonas(),
+        updatedAt: row.updated_at || new Date().toISOString()
+      };
+    }
+
+    async function signInWithGoogle() {
+      const errBox = document.getElementById("auth-error-msg");
+      if (errBox) errBox.classList.add("hidden");
+      const { error } = await sbClient.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + window.location.pathname
+        }
+      });
+      if (error && errBox) {
+        errBox.textContent = `Erro ao iniciar login Google: ${error.message}`;
+        errBox.classList.remove("hidden");
+      }
+    }
+
+    async function signOutSupabase() {
+      if (realtimeChannel) {
+        sbClient.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+      await sbClient.auth.signOut();
+      currentUser = null;
+      document.getElementById("auth-gate-screen").classList.remove("hidden");
+      document.getElementById("auth-loading-box").classList.add("hidden");
+      document.getElementById("auth-login-box").classList.remove("hidden");
+      showToast("Sessão encerrada com segurança.");
+    }
+
+    function loadLocalFallbackState() {
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
         if (saved && Array.isArray(saved.jobs) && saved.jobs.length > 0) {
@@ -2199,113 +2307,174 @@ ${CANDIDATE_PROFILE.linkedin}`;
             radarFeedbackLog: Array.isArray(saved.radarFeedbackLog) ? saved.radarFeedbackLog : [],
             jobs: saved.jobs
           };
+          return;
+        }
+      } catch (_) {}
+      appState.jobs = getSeedJobs();
+    }
+
+    async function loadFromSupabase(silent = true) {
+      if (!currentUser) return;
+      updateSyncIndicator("syncing");
+      try {
+        const [vagasRes, settingsRes] = await Promise.all([
+          sbClient.from("vagas").select("*").eq("user_id", currentUser.id).order("updated_at", { ascending: false }),
+          sbClient.from("careeros_settings").select("*").eq("user_id", currentUser.id).maybeSingle()
+        ]);
+
+        if (vagasRes.error) throw vagasRes.error;
+
+        if (settingsRes.data) {
+          appState.engine = settingsRes.data.engine || "fit";
+          appState.educationStatus = settingsRes.data.education_status || "Cursando";
+          appState.gupyFormatMode = settingsRes.data.gupy_format_mode || "bullets";
+          appState.dismissedRadarIds = Array.isArray(settingsRes.data.dismissed_radar_ids) ? settingsRes.data.dismissed_radar_ids : [];
+          appState.radarFeedbackLog = Array.isArray(settingsRes.data.radar_feedback_log) ? settingsRes.data.radar_feedback_log : [];
         }
 
-        const existingKeys = new Set(appState.jobs.map(j => `${normalizeText(j.company)}|${normalizeText(j.title)}`));
-        getSeedJobs().forEach(seed => {
-          const sig = `${normalizeText(seed.company)}|${normalizeText(seed.title)}`;
-          if (!existingKeys.has(sig)) {
-            existingKeys.add(sig);
-            appState.jobs.push(seed);
-          }
-        });
+        if (Array.isArray(vagasRes.data) && vagasRes.data.length > 0) {
+          appState.jobs = vagasRes.data.map(dbRowToJob);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        } else {
+          // 1º login com banco vazio: migra automaticamente localStorage ou vagas padrão
+          loadLocalFallbackState();
+          await pushAllToSupabase(true);
+          showToast("Migração inicial concluída: vagas enviadas para o Supabase!");
+        }
 
-        appState.jobs.forEach(job => {
-          const known = lookupKnownGlassdoorEntry(job.company);
-          if (known) {
-            if (!job.glassdoorUrl) job.glassdoorUrl = known.url;
-            if (normalizeText(job.company).includes("atlas") && (job.glassdoor === 4.1 || !job.glassdoor)) {
-              job.glassdoor = 2.8;
-              job.glassdoorUrl = known.url;
-            } else if (job.glassdoor == null) {
-              job.glassdoor = known.rating;
-            }
-          }
-        });
-        saveState(true);
-      } catch (_) {
-        appState.jobs = getSeedJobs();
+        updateSyncIndicator("idle");
+        setGlobalEngine(appState.engine);
+        if (!silent) showToast("Pipeline sincronizado com o Supabase.");
+      } catch (err) {
+        console.error("Erro Supabase load:", err);
+        updateSyncIndicator("error");
+        loadLocalFallbackState();
+        renderAll();
+        if (!silent) showToast("Erro ao carregar do Supabase.", "error");
       }
-      updateGistIndicator();
+    }
+
+    async function pushAllToSupabase(silent = true) {
+      if (!currentUser) return;
+      updateSyncIndicator("syncing");
+      lastLocalPushAt = Date.now();
+      try {
+        if (appState.jobs.length > 0) {
+          const rows = appState.jobs.map(j => jobToDbRow(j, currentUser.id));
+          const { error: vErr } = await sbClient.from("vagas").upsert(rows, { onConflict: "id" });
+          if (vErr) throw vErr;
+        }
+
+        const { error: sErr } = await sbClient.from("careeros_settings").upsert({
+          user_id: currentUser.id,
+          engine: appState.engine || "fit",
+          education_status: appState.educationStatus || "Cursando",
+          gupy_format_mode: appState.gupyFormatMode || "bullets",
+          dismissed_radar_ids: appState.dismissedRadarIds || [],
+          radar_feedback_log: appState.radarFeedbackLog || [],
+          updated_at: new Date().toISOString()
+        }, { onConflict: "user_id" });
+        if (sErr) throw sErr;
+
+        updateSyncIndicator("idle");
+        if (!silent) showToast("Sincronizado com sucesso no Supabase.");
+      } catch (err) {
+        console.error("Erro Supabase push:", err);
+        updateSyncIndicator("error");
+        if (!silent) showToast("Falha ao sincronizar com o Supabase.", "error");
+      }
+    }
+
+    async function syncNowWithSupabase(silent = false) {
+      await loadFromSupabase(silent);
     }
 
     function saveState(skipCloudAutoPush = false) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        if (!skipCloudAutoPush) {
-          scheduleAutoPushToGist();
+        if (!skipCloudAutoPush && currentUser) {
+          if (autoCloudSyncTimer) clearTimeout(autoCloudSyncTimer);
+          autoCloudSyncTimer = setTimeout(() => pushAllToSupabase(true), 700);
         }
       } catch (e) {
-        showToast("Erro ao salvar no navegador.", "error");
+        showToast("Erro ao salvar localmente.", "error");
       }
     }
 
-    function scheduleAutoPushToGist() {
-      const cfg = getGistConfig();
-      if (!cfg || !cfg.token || !cfg.gistId) return;
-      if (autoCloudSyncTimer) clearTimeout(autoCloudSyncTimer);
-      autoCloudSyncTimer = setTimeout(() => {
-        pushToGist(true);
-      }, 1200);
-    }
-
-    function resetToCuratedSeeds() {
+    async function resetToCuratedSeeds() {
       appState.jobs = getSeedJobs();
-      saveState();
+      saveState(true);
+      await pushAllToSupabase(false);
       renderAll();
-      showToast("8 oportunidades calibradas restauradas com sucesso.");
+      showToast("8 oportunidades calibradas restauradas no Supabase.");
     }
 
-    function getGistConfig() {
-      try {
-        return JSON.parse(localStorage.getItem(GIST_CONFIG_KEY)) || { token: "", gistId: "", lastSync: "" };
-      } catch {
-        return { token: "", gistId: "", lastSync: "" };
+    function setupRealtimeSubscription() {
+      if (!currentUser) return;
+      if (realtimeChannel) sbClient.removeChannel(realtimeChannel);
+
+      realtimeChannel = sbClient
+        .channel("careeros-vagas-live")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "vagas", filter: `user_id=eq.${currentUser.id}` },
+          async () => {
+            if (Date.now() - lastLocalPushAt < 2000) return;
+            await loadFromSupabase(true);
+            showToast("Novo card atualizado em tempo real via Supabase!");
+          }
+        )
+        .subscribe();
+    }
+
+    async function deleteCurrentJob() {
+      const job = appState.jobs.find(j => j.id === currentEditingJobId);
+      if (!job) return;
+      const idToDelete = job.id;
+      appState.jobs = appState.jobs.filter(j => j.id !== idToDelete);
+      saveState(true);
+      if (currentUser) {
+        lastLocalPushAt = Date.now();
+        await sbClient.from("vagas").delete().eq("id", idToDelete).eq("user_id", currentUser.id);
       }
+      closeJobDetailModal();
+      renderAll();
+      showToast(`Vaga "${job.title}" removida do Supabase.`);
     }
 
-    function updateGistIndicator(status = "idle") {
-      const cfg = getGistConfig();
-      const dot = document.getElementById("gist-sync-dot");
-      if (!dot) return;
-      if (status === "syncing") {
-        dot.className = "w-2 h-2 rounded-full bg-[#FF6B00] animate-ping";
-      } else if (status === "error") {
-        dot.className = "w-2 h-2 rounded-full bg-rose-500";
-      } else if (cfg.token && cfg.gistId) {
-        dot.className = "w-2 h-2 rounded-full bg-olive-600";
-      } else if (cfg.token) {
-        dot.className = "w-2 h-2 rounded-full bg-terracotta-600";
-      } else {
-        dot.className = "w-2 h-2 rounded-full bg-slate-300";
-      }
+    async function bootstrapAuthenticatedApp(user) {
+      if (currentUser && currentUser.id === user.id) return;
+      currentUser = user;
+
+      const userInfo = document.getElementById("sb-user-info");
+      if (userInfo) userInfo.textContent = user.email || "Conta Google conectada";
+
+      document.getElementById("auth-gate-screen").classList.add("hidden");
+      await loadFromSupabase(true);
+      setupRealtimeSubscription();
+      runStartupJobDiscovery(false);
     }
 
-    function openGistModal() {
-      const cfg = getGistConfig();
-      document.getElementById("gist-token").value = cfg.token || "";
-      document.getElementById("gist-id").value = cfg.gistId || "";
-      document.getElementById("gist-last-sync").textContent = cfg.lastSync || cfg.lastSyncAt
-        ? `Última sincronização: ${cfg.lastSync || cfg.lastSyncAt}`
-        : "Última sincronização: Nenhuma realizada ainda.";
-      document.getElementById("gist-modal").classList.remove("hidden");
+    window.addEventListener("DOMContentLoaded", async () => {
+      const searchEl = document.getElementById("global-search");
+      if (searchEl) searchEl.value = "";
       refreshIcons();
-    }
 
-    function closeGistModal() {
-      document.getElementById("gist-modal").classList.add("hidden");
-    }
+      const { data: { session } } = await sbClient.auth.getSession();
+      if (session && session.user) {
+        await bootstrapAuthenticatedApp(session.user);
+      } else {
+        document.getElementById("auth-loading-box").classList.add("hidden");
+        document.getElementById("auth-login-box").classList.remove("hidden");
+      }
 
-    function saveGistConfig() {
-      const token = document.getElementById("gist-token").value.trim();
-      const gistId = document.getElementById("gist-id").value.trim();
-      const prev = getGistConfig();
-      localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify({ ...prev, token, gistId }));
-      updateGistIndicator();
-      showToast("Credenciais do GitHub Gist salvas localmente.");
-    }
-
-    async function pushToGist(silent = false) {
+      sbClient.auth.onAuthStateChange(async (event, sess) => {
+        if (sess && sess.user && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+          await bootstrapAuthenticatedApp(sess.user);
+        }
+      });
+    });
+ {
       const cfg = getGistConfig();
       const tokenInput = document.getElementById("gist-token");
       const idInput = document.getElementById("gist-id");
@@ -4008,16 +4177,6 @@ Regras obrigatórias de filtragem:
       }
     }
 
-    function deleteCurrentJob() {
-      const job = appState.jobs.find(j => j.id === currentEditingJobId);
-      if (!job) return;
-      appState.jobs = appState.jobs.filter(j => j.id !== currentEditingJobId);
-      saveState();
-      closeJobDetailModal();
-      renderAll();
-      showToast(`Vaga "${job.title}" removida.`);
-    }
-
     function copyBlockById(elementId) {
       const el = document.getElementById(elementId);
       if (!el) return;
@@ -4178,27 +4337,6 @@ Regras obrigatórias de filtragem:
       if (dropdown && !dropdown.classList.contains("hidden") && !e.target.closest("#backup-dropdown") && !e.target.closest("button[onclick='toggleBackupMenu()']")) {
         dropdown.classList.add("hidden");
       }
-    });
-
-    window.addEventListener("DOMContentLoaded", async () => {
-      const searchEl = document.getElementById("global-search");
-      if (searchEl) {
-        searchEl.value = "";
-        setTimeout(() => {
-          if (/^(ghp_|github_pat_)/i.test(searchEl.value.trim())) {
-            searchEl.value = "";
-            renderAll();
-          }
-        }, 350);
-      }
-      loadState();
-      setGlobalEngine(appState.engine);
-      refreshIcons();
-      const cfg = getGistConfig();
-      if (cfg && cfg.token && cfg.gistId) {
-        await pullFromGist(true);
-      }
-      runStartupJobDiscovery(false);
     });
   </script>
 </body>
