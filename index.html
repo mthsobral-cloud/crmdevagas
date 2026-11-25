@@ -6,6 +6,7 @@
   <title>CareerOS • CRM de Vagas & Calibrador ATS | Matheus Sobral</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -188,6 +189,48 @@
   </style>
 </head>
 <body class="tech-midnight h-screen overflow-hidden flex flex-col antialiased selection:bg-terracotta-500 selection:text-white">
+  <!-- TELA DE LOGIN OAUTH (SUPABASE + GOOGLE) -->
+  <div id="auth-gate-screen" class="fixed inset-0 z-[120] flex items-center justify-center p-4" style="background: radial-gradient(circle at 20% 10%, rgba(255, 107, 0, 0.18) 0%, transparent 45%), linear-gradient(180deg, #070C1C 0%, #0B132B 100%);">
+    <div class="max-w-md w-full rounded-3xl p-8 border border-[#FF6B00]/30 shadow-2xl text-center space-y-6" style="background: rgba(18, 29, 61, 0.92); backdrop-filter: blur(18px);">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#0B132B] border border-[#FF6B00]/60 text-white flex items-center justify-center font-heading font-extrabold text-xl tracking-tight shadow-lg">
+          MS
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold text-white tracking-tight">CareerOS • CRM de Vagas</h1>
+          <p class="text-xs text-slate-400 mt-1">Calibrador ATS • Supabase Realtime • Agente Ready</p>
+        </div>
+      </div>
+
+      <div id="auth-loading-box" class="py-3 text-xs text-slate-300 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#FF6B00] animate-ping"></span>
+        <span>Verificando sessão segura...</span>
+      </div>
+
+      <div id="auth-login-box" class="hidden space-y-4">
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Entre com sua conta Google para acessar seu pipeline sincronizado em tempo real com o banco de dados e o agente no Antigravity.
+        </p>
+
+        <button type="button" onclick="signInWithGoogle()" class="w-full py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-3 shadow-lg transition-all cursor-pointer" style="background-color: #FFFFFF !important; color: #0F172A !important;">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+          </svg>
+          <span>Entrar com Google</span>
+        </button>
+
+        <p id="auth-error-msg" class="hidden text-xs text-rose-400 bg-rose-950/50 border border-rose-500/30 rounded-xl p-2.5"></p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-700/50 flex items-center justify-center gap-2 text-[11px] text-slate-400 font-mono">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span>Supabase Auth + Row Level Security</span>
+      </div>
+    </div>
+  </div>
 
   <div id="ats-print-container" class="hidden"></div>
   <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
@@ -233,9 +276,9 @@
             </button>
           </div>
 
-          <button onclick="toggleEducationStatus()" id="btn-edu-status" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-terracotta-50 text-terracotta-800 border border-terracotta-200 hover:bg-terracotta-100/70 transition-colors flex items-center gap-1.5 cursor-pointer">
-            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 stroke-[1.75] text-terracotta-700"></i>
-            <span id="edu-status-label">UERJ Cursando (16/20)</span>
+       <button onclick="syncNowWithSupabase(false)" title="Sincronizar agora com Supabase" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+            <span id="sb-sync-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="sb-sync-label" class="hidden sm:inline">Supabase Live</span>
           </button>
 
           <button onclick="openGistModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
