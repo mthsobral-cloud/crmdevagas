@@ -280,11 +280,9 @@
             <span id="sb-sync-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span id="sb-sync-label" class="hidden sm:inline">Supabase Live</span>
           </button>
-
-          <button onclick="openGistModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
-            <i data-lucide="cloud" class="w-3.5 h-3.5 stroke-[1.75] text-slate-500"></i>
-            <span class="hidden sm:inline">Nuvem</span>
-            <span id="gist-sync-dot" class="w-2 h-2 rounded-full bg-slate-300"></span>
+<button onclick="toggleEducationStatus()" id="btn-edu-status" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-terracotta-50 text-terracotta-800 border border-terracotta-200 hover:bg-terracotta-100/70 transition-colors flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 stroke-[1.75] text-terracotta-700"></i>
+            <span id="edu-status-label">UERJ Cursando (16/20)</span>
           </button>
 
           <div class="relative inline-block">
@@ -308,6 +306,11 @@
               <div class="my-1 border-t border-slate-100"></div>
               <button onclick="resetToCuratedSeeds(); toggleBackupMenu()" class="w-full text-left px-3.5 py-2 text-xs text-terracotta-700 hover:bg-terracotta-50 flex items-center gap-2 font-medium cursor-pointer">
                 <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 stroke-[1.75] text-terracotta-600"></i> Restaurar Vagas Padrão
+              </button>
+              <div class="my-1 border-t border-slate-100"></div>
+              <div id="sb-user-info" class="px-3.5 py-1.5 text-[10px] text-slate-400 truncate">Google OAuth</div>
+              <button onclick="signOutSupabase(); toggleBackupMenu()" class="w-full text-left px-3.5 py-2 text-xs text-rose-400 hover:bg-rose-950/40 flex items-center gap-2 font-medium cursor-pointer">
+                <i data-lucide="log-out" class="w-3.5 h-3.5 stroke-[1.75]"></i> Sair da Conta
               </button>
             </div>
           </div>
@@ -2475,56 +2478,6 @@ ${CANDIDATE_PROFILE.linkedin}`;
       });
     });
  {
-      const cfg = getGistConfig();
-      const tokenInput = document.getElementById("gist-token");
-      const idInput = document.getElementById("gist-id");
-      const token = (tokenInput && tokenInput.value.trim()) || cfg.token || "";
-      let gistId = (idInput && idInput.value.trim()) || cfg.gistId || "";
-
-      if (!token) {
-        if (!silent) showToast("Informe seu GitHub Personal Access Token (escopo gist).", "error");
-        return;
-      }
-      try {
-        updateGistIndicator("syncing");
-        if (!silent) showToast("Enviando dados para o GitHub Gist...");
-        const payload = {
-          description: "CareerOS Backup - Matheus Sobral CRM & ATS",
-          public: false,
-          files: {
-            "crm_vagas_matheus_sobral.json": {
-              content: JSON.stringify(appState, null, 2)
-            }
-          }
-        };
-        const url = gistId ? `https://api.github.com/gists/${gistId}` : "https://api.github.com/gists";
-        const method = gistId ? "PATCH" : "POST";
-        const response = await fetch(url, {
-          method,
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/vnd.github+json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        gistId = data.id;
-        if (idInput) idInput.value = gistId;
-        const nowStr = new Date().toLocaleString("pt-BR");
-        localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify({ token, gistId, lastSync: nowStr }));
-        const syncEl = document.getElementById("gist-last-sync");
-        if (syncEl) syncEl.textContent = `Última sincronização: ${nowStr} (Auto-Push ativo)`;
-        updateGistIndicator("idle");
-        if (!silent) showToast("Sincronizado com sucesso na nuvem.");
-      } catch (err) {
-        updateGistIndicator("error");
-        if (!silent) showToast("Falha ao enviar para o Gist. Verifique o Token e o Gist ID.", "error");
-      }
-    }
-
-    async function pullFromGist(silent = false) {
       const cfg = getGistConfig();
       const tokenInput = document.getElementById("gist-token");
       const idInput = document.getElementById("gist-id");
