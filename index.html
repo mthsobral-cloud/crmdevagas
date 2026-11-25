@@ -2477,51 +2477,7 @@ ${CANDIDATE_PROFILE.linkedin}`;
         }
       });
     });
- {
-      const cfg = getGistConfig();
-      const tokenInput = document.getElementById("gist-token");
-      const idInput = document.getElementById("gist-id");
-      const token = (tokenInput && tokenInput.value.trim()) || cfg.token || "";
-      const gistId = (idInput && idInput.value.trim()) || cfg.gistId || "";
-
-      if (!token || !gistId) {
-        if (!silent) showToast("Informe o Token e o Gist ID para baixar da nuvem.", "error");
-        return;
-      }
-      try {
-        updateGistIndicator("syncing");
-        if (!silent) showToast("Baixando dados do GitHub Gist...");
-        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/vnd.github+json"
-          }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        const fileObj = data.files && (data.files["crm_vagas_matheus_sobral.json"] || Object.values(data.files)[0]);
-        if (!fileObj || !fileObj.content) throw new Error("Arquivo não encontrado no Gist");
-
-        const remoteData = JSON.parse(fileObj.content);
-        if (remoteData && Array.isArray(remoteData.jobs)) {
-          appState = remoteData;
-        } else if (Array.isArray(remoteData)) {
-          appState.jobs = remoteData.map((item, idx) => convertLegacyV2Job(item, idx));
-        }
-        saveState(true);
-        renderAll();
-        const nowStr = new Date().toLocaleString("pt-BR");
-        localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify({ token, gistId, lastSync: nowStr }));
-        const syncEl = document.getElementById("gist-last-sync");
-        if (syncEl) syncEl.textContent = `Última sincronização: ${nowStr} (Pull concluído)`;
-        updateGistIndicator("idle");
-        if (!silent) showToast("Dados restaurados da nuvem com sucesso.");
-      } catch (err) {
-        updateGistIndicator("error");
-        if (!silent) showToast("Erro ao baixar do GitHub Gist. Verifique as credenciais.", "error");
-      }
-    }
-
+    
     function toggleBackupMenu() {
       document.getElementById("backup-dropdown").classList.toggle("hidden");
     }
