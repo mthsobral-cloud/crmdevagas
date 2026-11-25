@@ -1493,7 +1493,17 @@
         xrayUrl
       };
     }
+function formatGlassdoorSalary(job) {
+  const range = String(job.salaryRange || "").trim();
+  const avg = job.salaryAvg !== null && job.salaryAvg !== undefined && !isNaN(parseFloat(job.salaryAvg))
+    ? Number(parseFloat(job.salaryAvg)).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
+    : null;
 
+  if (range && avg) return `${range} (Média ${avg})`;
+  if (range) return range;
+  if (avg) return `Média Glassdoor: ${avg}/mês`;
+  return "Salário Glassdoor: não informado";
+}
     const TALENT_POOL_BLACKLIST = [
       "banco de talentos",
       "talent pool",
@@ -2267,6 +2277,10 @@ ${CANDIDATE_PROFILE.linkedin}`;
         manualTrack: row.trilha_manual || "",
         personas: Array.isArray(row.personas) && row.personas.length > 0 ? row.personas : createDefaultPersonas(),
         updatedAt: row.updated_at || new Date().toISOString()
+        salaryAvg: row.glassdoor_salario_medio !== null && row.glassdoor_salario_medio !== undefined ? Number(row.glassdoor_salario_medio) : null,
+salaryRange: row.glassdoor_salario_faixa || "",
+salarySource: row.glassdoor_salario_fonte || "Glassdoor - Dados informados",
+salaryStatus: row.glassdoor_salario_status || "nao_informado",
       };
     }
 
@@ -3402,7 +3416,9 @@ Regras obrigatórias de filtragem:
                         ${escapeHtml(evalData.glassdoorPolicy.label)}
                       </a>
                     </div>
-
+<span title="${escapeHtml(job.salarySource || 'Glassdoor - Dados informados')}" class="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/35">
+                    💰 ${escapeHtml(formatGlassdoorSalary(job))}
+                  </span>
                     <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px] text-slate-500 font-mono">
                       <span class="shrink-0" title="Contatos acionados no Mini-CRM">👥 ${activeContacts}/4</span>
                       <select
