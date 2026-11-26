@@ -864,6 +864,22 @@
                 <input id="ed-glassdoor-url" type="url" placeholder="https://www.glassdoor.com.br/Avaliações/..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg font-mono text-[11px]" />
               </div>
 
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                  <label class="block font-semibold text-slate-600 mb-1">Salário Glassdoor (Faixa)</label>
+                  <input id="ed-salary-range" type="text" placeholder="Ex: R$ 8.000 - R$ 10.000/mês" class="w-full px-3 py-1.5 border border-slate-200 rounded-lg font-mono text-[11px]" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-600 mb-1">Média Mensal (R$)</label>
+                  <input id="ed-salary-avg" type="number" step="100" min="0" placeholder="Ex: 8500" class="w-full px-3 py-1.5 border border-slate-200 rounded-lg font-mono text-[11px]" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">➡️ Próxima Etapa / Ação Necessária</label>
+                <input id="ed-next-step" type="text" placeholder="Ex: Responder Mapeamento Comportamental na Gupy ou enviar vídeo..." class="w-full px-3 py-1.5 border border-terracotta-200 rounded-lg bg-terracotta-50/40 focus:outline-none focus:border-terracotta-600" />
+              </div>
+
               <div>
                 <div class="flex items-center justify-between mb-1">
                   <label class="font-semibold text-slate-600">Motivo de Descarte / Negativa ou Próximo Passo</label>
@@ -1510,6 +1526,25 @@ function formatGlassdoorSalary(job) {
   if (range) return range;
   if (avg) return `Média Glassdoor: ${avg}/mês`;
   return "Salário Glassdoor: não informado";
+}
+
+function formatGlassdoorSalaryCompact(job) {
+  const range = String(job.salaryRange || "").trim();
+  if (range) {
+    const match = range.match(/R\$\s*([\d.,]+k?)\s*(?:-|–|a)\s*(?:R\$\s*)?([\d.,]+k?)/i);
+    if (match) {
+      return `R$ ${match[1]} - ${match[2]}`;
+    }
+    const single = range.match(/R\$\s*([\d.,]+k?)/i);
+    if (single) {
+      return `R$ ${single[1]}`;
+    }
+  }
+  if (job.salaryAvg !== null && job.salaryAvg !== undefined && !isNaN(parseFloat(job.salaryAvg))) {
+    const avg = Number(parseFloat(job.salaryAvg)).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+    return `~${avg}`;
+  }
+  return "N/I";
 }
     const TALENT_POOL_BLACKLIST = [
       "banco de talentos",
@@ -2262,7 +2297,8 @@ function jobToDbRow(job, userId) {
         glassdoor_salario_medio: job.salaryAvg !== null && job.salaryAvg !== undefined && job.salaryAvg !== "" && !isNaN(parseFloat(job.salaryAvg)) ? Number(parseFloat(job.salaryAvg)) : null,
         glassdoor_salario_faixa: job.salaryRange || "",
         glassdoor_salario_fonte: job.salarySource || "Glassdoor - Dados informados",
-        glassdoor_salario_status: job.salaryStatus || "nao_informado"
+        glassdoor_salario_status: job.salaryStatus || "nao_informado",
+        proxima_etapa: job.nextStep || ""
       };
     }
 
@@ -2291,7 +2327,8 @@ function jobToDbRow(job, userId) {
         salaryAvg: row.glassdoor_salario_medio !== null && row.glassdoor_salario_medio !== undefined ? Number(row.glassdoor_salario_medio) : null,
         salaryRange: row.glassdoor_salario_faixa || "",
         salarySource: row.glassdoor_salario_fonte || "Glassdoor - Dados informados",
-        salaryStatus: row.glassdoor_salario_status || "nao_informado"
+        salaryStatus: row.glassdoor_salario_status || "nao_informado",
+        nextStep: row.proxima_etapa || ""
       };
     }
       
@@ -3412,7 +3449,7 @@ Regras obrigatórias de filtragem:
                       <h4 class="text-sm font-bold text-slate-900 leading-snug mt-1 line-clamp-2">${escapeHtml(job.title)}</h4>
                     </div>
 
-                    <div class="flex flex-wrap gap-1.5">
+                    <div class="flex flex-wrap items-center gap-1.5">
                       <span class="px-2.5 py-0.5 rounded-md text-[11px] font-medium border ${evalData.modelPolicy.badgeClass}">
                         ${escapeHtml(job.location || evalData.modelPolicy.badgeLabel)}
                       </span>
@@ -3426,10 +3463,15 @@ Regras obrigatórias de filtragem:
                       >
                         ${escapeHtml(evalData.glassdoorPolicy.label)}
                       </a>
+                      <span title="${escapeHtml(formatGlassdoorSalary(job))} (${escapeHtml(job.salarySource || 'Glassdoor - Dados informados')})" class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/35">
+                        💰 ${escapeHtml(formatGlassdoorSalaryCompact(job))}
+                      </span>
                     </div>
-<span title="${escapeHtml(job.salarySource || 'Glassdoor - Dados informados')}" class="px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/35">
-                    💰 ${escapeHtml(formatGlassdoorSalary(job))}
-                  </span>
+                    ${job.nextStep && job.stage !== "Descartada / Declinada" ? `
+                      <div title="${escapeHtml(job.nextStep)}" class="px-2 py-1 rounded-lg bg-terracotta-50/70 border border-terracotta-200/80 text-[10px] text-terracotta-800 leading-snug line-clamp-2">
+                        ➡️ <strong>Próx.:</strong> ${escapeHtml(job.nextStep)}
+                      </div>
+                    ` : ""}
                     <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px] text-slate-500 font-mono">
                       <span class="shrink-0" title="Contatos acionados no Mini-CRM">👥 ${activeContacts}/4</span>
                       <select
@@ -3765,6 +3807,12 @@ Regras obrigatórias de filtragem:
       if (gdUrlInput) {
         gdUrlInput.value = job.glassdoorUrl || evalData.glassdoorPolicy.searchUrl || "";
       }
+      const salRangeEl = document.getElementById("ed-salary-range");
+      if (salRangeEl) salRangeEl.value = job.salaryRange || "";
+      const salAvgEl = document.getElementById("ed-salary-avg");
+      if (salAvgEl) salAvgEl.value = job.salaryAvg !== null && job.salaryAvg !== undefined ? job.salaryAvg : "";
+      const nextStepEl = document.getElementById("ed-next-step");
+      if (nextStepEl) nextStepEl.value = job.nextStep || "";
       document.getElementById("ed-discard-reason").value = job.discardReason || "";
       document.getElementById("ed-description").value = job.description;
       document.getElementById("ed-notes").value = job.notes || "";
@@ -4081,6 +4129,12 @@ Regras obrigatórias de filtragem:
       if (gdUrlEl && gdUrlEl.value.trim()) {
         job.glassdoorUrl = gdUrlEl.value.trim();
       }
+      const salRangeEl = document.getElementById("ed-salary-range");
+      if (salRangeEl) job.salaryRange = salRangeEl.value.trim();
+      const salAvgEl = document.getElementById("ed-salary-avg");
+      if (salAvgEl) job.salaryAvg = salAvgEl.value === "" ? null : Number(salAvgEl.value);
+      const nextStepEl = document.getElementById("ed-next-step");
+      if (nextStepEl) job.nextStep = nextStepEl.value.trim();
       job.url = document.getElementById("ed-url").value.trim();
       job.discardReason = document.getElementById("ed-discard-reason").value.trim();
       job.description = updatedDesc;
