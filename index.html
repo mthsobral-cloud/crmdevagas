@@ -125,6 +125,13 @@
       border-color: #FF6B00 !important;
       box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
     }
+    body.tech-midnight textarea.next-step-inline,
+    body.tech-midnight textarea.next-step-inline:focus {
+      background-color: transparent !important;
+      color: #FF984F !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
     body.tech-midnight .bg-terracotta-50,
     body.tech-midnight .bg-terracotta-50\/70,
     body.tech-midnight .bg-terracotta-50\/40 {
@@ -3491,7 +3498,7 @@ Regras obrigatórias de filtragem:
                           onclick="event.stopPropagation()"
                           onmousedown="event.stopPropagation()"
                           onchange="quickUpdateJobNextStep('${job.id}', this.value)"
-                          class="w-full bg-transparent text-[10px] text-terracotta-800 placeholder-slate-400 focus:outline-none font-medium leading-snug resize-none"
+                          class="next-step-inline w-full bg-transparent text-[10px] text-terracotta-800 placeholder-slate-400 focus:outline-none font-medium leading-snug resize-none"
                         >${escapeHtml(job.nextStep || "")}</textarea>
                       </div>
                     ` : ""}
