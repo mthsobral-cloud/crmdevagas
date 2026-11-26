@@ -1546,6 +1546,20 @@ function formatGlassdoorSalaryCompact(job) {
   }
   return "N/I";
 }
+
+function formatLastUpdatedStamp(job) {
+  if (job.updatedAt) {
+    const d = new Date(job.updatedAt);
+    if (!isNaN(d.getTime())) {
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${dd}/${mm} ${hh}:${min}`;
+    }
+  }
+  return job.verifiedAt || "—";
+}
     const TALENT_POOL_BLACKLIST = [
       "banco de talentos",
       "talent pool",
@@ -3481,6 +3495,9 @@ Regras obrigatórias de filtragem:
                         >${escapeHtml(job.nextStep || "")}</textarea>
                       </div>
                     ` : ""}
+                    <div class="text-[10px] text-slate-400 font-mono flex items-center justify-between">
+                      <span title="Última atualização do card">🕒 Atualizada: ${escapeHtml(formatLastUpdatedStamp(job))}</span>
+                    </div>
                     <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px] text-slate-500 font-mono">
                       <span class="shrink-0" title="Contatos acionados no Mini-CRM">👥 ${activeContacts}/4</span>
                       <select
@@ -4080,11 +4097,12 @@ Regras obrigatórias de filtragem:
       const trimmed = String(newValue || "").trim();
       if ((job.nextStep || "") === trimmed) return;
       job.nextStep = trimmed;
+      job.verifiedAt = formatNowTimestamp();
       job.updatedAt = new Date().toISOString();
       saveState();
+      renderAll();
       if (currentEditingJobId === job.id) {
-        const nextStepEl = document.getElementById("ed-next-step");
-        if (nextStepEl) nextStepEl.value = trimmed;
+        renderJobDetailModal(job.id);
       }
       showToast("Próxima etapa salva.");
     }
