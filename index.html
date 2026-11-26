@@ -684,9 +684,9 @@
             <label class="block font-semibold text-slate-700 mb-1">Etapa Inicial</label>
             <select id="nj-stage" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:outline-none focus:border-terracotta-600">
               <option value="Mapeada">Mapeada</option>
-              <option value="Abordagem / Networking">Abordagem / Networking</option>
               <option value="Inscrição">Inscrição</option>
               <option value="Inscrito">Inscrito</option>
+              <option value="Abordagem / Networking">Abordagem / Networking</option>
             </select>
           </div>
         </div>
@@ -1022,6 +1022,13 @@
             </span>
           </div>
 
+          <div id="net-pre-apply-notice" class="hidden px-4 py-3 rounded-xl bg-terracotta-50 border border-terracotta-200 flex items-start sm:items-center gap-2.5 text-xs">
+            <i data-lucide="clock" class="w-4 h-4 stroke-[1.75] text-terracotta-700 shrink-0 mt-0.5 sm:mt-0"></i>
+            <p class="text-slate-700 leading-relaxed">
+              <strong class="font-semibold text-terracotta-800">Vaga em etapa Mapeada:</strong> inicie as abordagens de networking apenas após concluir sua inscrição na vaga (os roteiros abaixo consideram candidatura já enviada).
+            </p>
+          </div>
+
           <div id="networking-personas-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
 
@@ -1271,9 +1278,9 @@
 
     const KANBAN_STAGES = [
       { id: "Mapeada", label: "Mapeada" },
-      { id: "Abordagem / Networking", label: "Abordagem / Networking" },
       { id: "Inscrição", label: "Inscrição" },
       { id: "Inscrito", label: "Inscrito" },
+      { id: "Abordagem / Networking", label: "Abordagem / Networking" },
       { id: "Entrevista / Processo", label: "Entrevista / Processo" },
       { id: "Oferta / Finalista", label: "Oferta / Finalista" },
       { id: "Descartada / Declinada", label: "Descartada / Declinada" }
@@ -3901,6 +3908,11 @@ Regras obrigatórias de filtragem:
       const personas = job.personas || createDefaultPersonas();
       const hasReferral = personas.some(p => p.status === "Indicação confirmada");
       document.getElementById("net-bonus-badge").textContent = `Networking Gaia: ${hasReferral ? 5 : 0} / 5 pts`;
+
+      const preApplyNotice = document.getElementById("net-pre-apply-notice");
+      if (preApplyNotice) {
+        preApplyNotice.classList.toggle("hidden", job.stage !== "Mapeada");
+      }
 
       document.getElementById("networking-personas-grid").innerHTML = personas.map((p, idx) => {
         const scripts = generatePersonaScripts(job, p);
