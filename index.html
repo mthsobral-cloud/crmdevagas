@@ -3467,9 +3467,18 @@ Regras obrigatórias de filtragem:
                         💰 ${escapeHtml(formatGlassdoorSalaryCompact(job))}
                       </span>
                     </div>
-                    ${job.nextStep && job.stage !== "Descartada / Declinada" ? `
-                      <div title="${escapeHtml(job.nextStep)}" class="px-2 py-1 rounded-lg bg-terracotta-50/70 border border-terracotta-200/80 text-[10px] text-terracotta-800 leading-snug line-clamp-2">
-                        ➡️ <strong>Próx.:</strong> ${escapeHtml(job.nextStep)}
+                    ${job.stage !== "Descartada / Declinada" ? `
+                      <div onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" ondragstart="event.stopPropagation()" class="flex items-start gap-1.5 px-2 py-1 rounded-lg bg-terracotta-50/70 border border-terracotta-200/80 focus-within:border-terracotta-500">
+                        <span class="text-[10px] shrink-0 mt-0.5" title="Próxima etapa / ação necessária">➡️</span>
+                        <textarea
+                          rows="2"
+                          placeholder="Próxima etapa..."
+                          title="${escapeHtml(job.nextStep || 'Clique para editar a próxima etapa')}"
+                          onclick="event.stopPropagation()"
+                          onmousedown="event.stopPropagation()"
+                          onchange="quickUpdateJobNextStep('${job.id}', this.value)"
+                          class="w-full bg-transparent text-[10px] text-terracotta-800 placeholder-slate-400 focus:outline-none font-medium leading-snug resize-none"
+                        >${escapeHtml(job.nextStep || "")}</textarea>
                       </div>
                     ` : ""}
                     <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-1.5 text-[11px] text-slate-500 font-mono">
@@ -4063,6 +4072,21 @@ Regras obrigatórias de filtragem:
       if (currentEditingJobId) {
         renderJobDetailModal(currentEditingJobId);
       }
+    }
+
+    function quickUpdateJobNextStep(jobId, newValue) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const trimmed = String(newValue || "").trim();
+      if ((job.nextStep || "") === trimmed) return;
+      job.nextStep = trimmed;
+      job.updatedAt = new Date().toISOString();
+      saveState();
+      if (currentEditingJobId === job.id) {
+        const nextStepEl = document.getElementById("ed-next-step");
+        if (nextStepEl) nextStepEl.value = trimmed;
+      }
+      showToast("Próxima etapa salva.");
     }
 
     function quickChangeJobStage(jobId, newStage) {
